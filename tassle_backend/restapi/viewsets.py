@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django_cognito_jwt import JSONWebTokenAuthentication
 
-from restapi.exceptions import MissingTemplateOrParams
+from restapi.exceptions import MissingTemplateOrParams, TemplateNotFound
 from utils.render import PlainTextRenderer
 from .models import Templates
 from .serializers import TemplatesSerializer
@@ -17,7 +17,7 @@ class TemplateViewset(viewsets.ModelViewSet):
     lookup_url_kwarg = 'uuid'
     serializer_class = TemplatesSerializer
     renderer_classes = [PlainTextRenderer, JSONRenderer]
-    http_method_names = ['post', 'delete']
+    http_method_names = ['post', 'delete', 'get']
 
     def create(self, request, **kwargs):
         """
@@ -26,20 +26,33 @@ class TemplateViewset(viewsets.ModelViewSet):
 
         template=File
         params=File
-
         :param request:
         :param kwargs:
         :return:
         """
+        print(request.query_params)
         t = Templates()
         t.parse_request(request)
-        t_serializer = TemplatesSerializer(t)
         return Response(t.render(), content_type='text/plain')
 
-    @action(methods=['post'], detail=False)
-    def debug(self, request, **kwargs):
+    def retrieve(self, request, uuid=None, **kwargs):
         """
-        User wants to debug a template in the UI
+        Get a specific template by uuid
+        :param request:
+        :param uuid:
+        :param kwargs:
+        :return: Template data
+        """
+        try:
+            t = Templates.objects.get(uuid=uuid)
+        except Templates.DoesNotExist:
+            raise TemplateNotFound
+        return Response(t.get_template, content_type='text/plain')
+
+    @action(methods=['post'], detail=False)
+    def edit(self, request, *kwargs):
+        """
+        User wants to edit a template so we return the details & URL
         :param request:
         :param kwargs:
         :return: link to template editor for this template
