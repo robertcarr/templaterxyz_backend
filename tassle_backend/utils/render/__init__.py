@@ -20,6 +20,10 @@ class RenderMixin:
     def get_params(self):
         return self._read_params()
 
+    def _update_params(self, param_file):
+        """ Update the params file object """
+        self.params = param_file
+
     def _read_template(self):
         """ Read in raw template from storage and return text of template """
         # Reset to beginning of file if it's been read already

@@ -26,3 +26,11 @@ class InvalidParameterFormat(APIException):
     status_code = 400
     default_detail = "Parameters must be in valid JSON format"
     default_code = 'invalid_parameter_format'
+
+class MissingParameters(APIException):
+    """
+    Raised when specifically missing only parameters
+    """
+    status_code = 400
+    default_detail = 'The parameters are missing.  We cannot render this template'
+    default_code = 'parameters_missing'

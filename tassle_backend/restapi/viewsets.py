@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django_cognito_jwt import JSONWebTokenAuthentication
 
-from restapi.exceptions import MissingTemplateOrParams, TemplateNotFound
+from restapi.exceptions import MissingTemplateOrParams, TemplateNotFound, MissingParameters
 from utils.render import PlainTextRenderer
 from .models import Templates
 from .serializers import TemplatesSerializer
@@ -17,7 +17,7 @@ class TemplateViewset(viewsets.ModelViewSet):
     lookup_url_kwarg = 'uuid'
     serializer_class = TemplatesSerializer
     renderer_classes = [PlainTextRenderer, JSONRenderer]
-    http_method_names = ['post', 'delete', 'get']
+    http_method_names = ['post', 'delete', 'get', 'put']
 
     def create(self, request, **kwargs):
         """
@@ -30,9 +30,21 @@ class TemplateViewset(viewsets.ModelViewSet):
         :param kwargs:
         :return:
         """
-        print(request.query_params)
+        print(f'UUID={uuid}')
         t = Templates()
         t.parse_request(request)
+        return Response(t.render(), content_type='text/plain')
+
+    def update(self, request, uuid=None):
+        """ Render and Existing Template but with new parameters """
+        try:
+            t = Templates.objects.get(uuid=uuid)
+            try:
+                t._update_params(request.FILES['params'])
+            except KeyError:
+                raise MissingParameters
+        except Templates.DoesNotExist:
+            raise TemplateNotFound
         return Response(t.render(), content_type='text/plain')
 
     def retrieve(self, request, uuid=None, **kwargs):

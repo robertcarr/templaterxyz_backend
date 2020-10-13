@@ -5,3 +5,4 @@ from .viewsets import TemplateViewset
 
 router = OptionalSlashRouter()
 router.register(r'', TemplateViewset, basename='template')
+router.register(r'', TemplateViewset, basename='template')
