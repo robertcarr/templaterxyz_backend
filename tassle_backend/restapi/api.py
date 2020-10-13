@@ -1,7 +1,7 @@
 # API Endpoint mapping to Viewsets
-from rest_framework.routers import DefaultRouter
 
+from utils.routers import OptionalSlashRouter
 from .viewsets import TemplateViewset
 
-router = DefaultRouter()
+router = OptionalSlashRouter()
 router.register(r'', TemplateViewset, basename='template')
