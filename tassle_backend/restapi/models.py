@@ -5,6 +5,7 @@ from django.conf import settings
 from django.db import models
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.sites.models import Site
+from rest_framework.reverse import reverse, reverse_lazy
 
 from utils.core import get_shortuuid, get_upload_folder, get_template_url
 from utils.render import RenderMixin
@@ -113,11 +114,13 @@ class Templates(models.Model, RenderMixin):
         except KeyError:
             raise MissingTemplateOrParams
 
-
     def get_url(self, request=None):
         """ Return a URL for this object - Not the direct S3 Object"""
         return get_template_url(self, request)
 
+    def get_reverse(self, action, request):
+        """ Return the full URL of the action request (e.g. template-list) """
+        return reverse_lazy(action, request=request)
 
     class Meta:
         verbose_name = 'Templates'

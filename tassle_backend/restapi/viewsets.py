@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django_cognito_jwt import JSONWebTokenAuthentication
 
-from restapi.exceptions import MissingTemplateOrParams, TemplateNotFound, MissingParameters
+from restapi.exceptions import MissingTemplateOrParams, TemplateNotFound, MissingParameters, AccountRequired
 from utils.render import PlainTextRenderer
 from .models import Templates
 from .serializers import TemplatesSerializer
@@ -19,6 +19,18 @@ class TemplateViewset(viewsets.ModelViewSet):
     renderer_classes = [PlainTextRenderer, JSONRenderer]
     http_method_names = ['post', 'delete', 'get', 'put']
 
+    def list(self, request):
+        """
+        If logged in, return your some template details otherwise raise exception
+        :param requset:
+        :return:
+        """
+        if request.user.is_anonymous:
+            raise AccountRequired
+        # For now just dump all their templates
+        serializer = TemplatesSerializer(self.get_queryset(), many=True)
+        return Response(serializer.data)
+
     def create(self, request, **kwargs):
         """
         Post a new template as form file fields.  By default, we don't save this so it's
@@ -30,7 +42,6 @@ class TemplateViewset(viewsets.ModelViewSet):
         :param kwargs:
         :return:
         """
-        print(f'UUID={uuid}')
         t = Templates()
         t.parse_request(request)
         return Response(t.render(), content_type='text/plain')
@@ -72,8 +83,8 @@ class TemplateViewset(viewsets.ModelViewSet):
         t = Templates()
         t.parse_request(request)
         t.save()
-        t_serializer = TemplatesSerializer(t)
-        return Response(t_serializer.data)
+        serializer = TemplatesSerializer(t)
+        return Response(serializer.data)
 
     def get_queryset(self):
-        return self.model.objects.all()
+        return self.model.objects.filter(user=self.request.user)
