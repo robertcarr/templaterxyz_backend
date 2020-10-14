@@ -72,6 +72,7 @@ AWS_STORAGE_BUCKET_NAME = env('DJANGO_STORAGE_BUCKET_NAME')
 
 # Use default sqlite3 database unless you have DATABASE_URL environment set
 try:
+    #DATABASES = {'default': {}}
     DATABASES = {'default': env.db()}
 except environ.ImproperlyConfigured:
     DATABASES = {'default': environ.Env().db_url_config('sqlite:///' + os.path.join(BASE_DIR, 'db.sqlite3'))}

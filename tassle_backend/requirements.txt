@@ -1,0 +1,22 @@
+# Basic Django
+django==2.2.16
+django-environ==0.4.5
+#mysqlclient==2.0.1
+pymysql
+
+# django-restframework
+djangorestframework==3.12.1
+django-cors-headers==3.5.0
+django-cognito-jwt==0.0.3
+django-filter
+django-extensions
+markdown
+
+# Cognito/AWS Specific
+django-storages==1.10.1
+boto3==1.15.16
+
+
+# Django Admin Improvements
+django-grappelli==2.14.2
+

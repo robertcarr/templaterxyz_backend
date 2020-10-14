@@ -17,8 +17,10 @@ from django.contrib import admin
 from django.urls import path, include
 
 from restapi.api import router
+from restapi.views import status_view
 
 urlpatterns = [
+    path('', status_view, name='status'),
     path('api/', include(router.urls)),
     path('grappelli/', include('grappelli.urls')),
     path('admin/', admin.site.urls),
