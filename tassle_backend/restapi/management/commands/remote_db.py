@@ -21,11 +21,12 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('-s', '--show', action='store_true', default=False,
-                            help='Create a new database with CREATE DATABASE command and assign permissions')
+                            help='Show all databases SHOW ALL DATABASES')
         parser.add_argument('-i', '--init', action='store_true', help='CREATE Database and GRANT permissions')
-        parser.add_argument('-r', '--run', nargs='+', type=str, help='Run SQL command on remote db')
+        parser.add_argument('-c', '--command', nargs='+', type=str, help='Run SQL command on remote database server')
+        parser.add_argument('-d', '--database', type=str, help="Remote Database to work with")
 
-    def run_command(self, cmd):
+    def run_command(self, cmd, db=None):
         """ run command on remote db """
         try:
             logger.info(f"cmd: {cmd}")
@@ -35,7 +36,7 @@ class Command(BaseCommand):
             logger.info(c.fetchall())
             c.close()
         except Exception as e:
-            log.error(f"Error {e}")
+            logger.error(f"Error {e}")
 
     def init_db(self):
         """ initialize the database and grant any permissions """
@@ -67,28 +68,38 @@ class Command(BaseCommand):
             logger.error(f"Error: {e}")
 
     def _connect_to_db(self):
-        """ Connect and return db handle """
+        """Connect and return db handle & optionally a specific database"""
+        print(self._db)
         try:
             logger.info(f"Connecting to [{db_conf['NAME']}]")
             logger.info(f"Host to [{db_conf['HOST']}]")
-            db = MySQLdb.connect(host=db_conf['HOST'],
-                                 user=db_conf['USER'],
-                                 password=db_conf['PASSWORD'],
-                                 connect_timeout=self.TIMEOUT)
+            options = dict({'host': db_conf['HOST'],
+                            'user': db_conf['USER'],
+                            'password': db_conf['PASSWORD']})
+            if self._db:
+                options['db'] = self._db
+            dbh = MySQLdb.connect(**options)
+            #db = MySQLdb.connect(host=db_conf['HOST'],
+            #                     user=db_conf['USER'],
+            #                     password=db_conf['PASSWORD'],
+            #                     connect_timeout=self.TIMEOUT)
             logger.info("connected to db")
-            return db
+            return dbh
         except Exception as e:
             logger.error(f"Error connecting to db [{db_conf['NAME']}: error: {e}")
             sys.exit()
 
     def handle(self, *args, **kwargs):
+        if kwargs['database']:
+            self._db = kwargs['database']
+
         if kwargs['init']:
             self.init_db()
             return
         if kwargs['show']:
             self.show_databases()
             return
-        if kwargs['run']:
-            cmd = ' '.join(list(kwargs['run']))
+        if kwargs['command']:
+            cmd = ' '.join(list(kwargs['command']))
             self.run_command(cmd)
             return
