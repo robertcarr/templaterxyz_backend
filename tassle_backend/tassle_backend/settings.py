@@ -67,6 +67,14 @@ AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = env('DJANGO_STORAGE_BUCKET_NAME')
 
+## Store Staticfile in S3
+AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+AWS_DEFAULT_ACL = 'public-read'
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+AWS_S3_LOCATION = 'static'
+STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_S3_LOCATION}/'
+STATICFILES_STORAGE = DEFAULT_FILE_STORAGE
+
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 # Default to standard django sqlite file DB if environment variable not set
