@@ -31,8 +31,8 @@ class TemplateViewset(viewsets.ModelViewSet):
         :param requset:
         :return:
         """
-        if request.user.is_anonymous:
-            raise AccountRequired
+        #if request.user.is_anonymous:
+        #    raise AccountRequired
         # For now just dump all their templates
         serializer = TemplatesSerializer(self.get_queryset(), many=True)
         return Response(serializer.data)

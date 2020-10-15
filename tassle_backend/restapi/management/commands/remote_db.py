@@ -8,12 +8,10 @@ from django.conf import settings
 import environ
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 env = environ.Env()
 env.read_env(os.path.join(settings.BASE_DIR, '.env'))
 db_conf = env.db()
-
 
 class Command(BaseCommand):
     TIMEOUT = 5
