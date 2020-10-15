@@ -17,6 +17,8 @@ class TemplateViewset(viewsets.ModelViewSet):
     lookup_url_kwarg = 'uuid'
     serializer_class = TemplatesSerializer
     renderer_classes = [JSONRenderer, PlainTextRenderer]
+    authentication_classes = [JSONWebTokenAuthentication]
+    permission_classes = [IsAuthenticated]
     http_method_names = ['post', 'delete', 'get', 'put']
 
     def list(self, request):

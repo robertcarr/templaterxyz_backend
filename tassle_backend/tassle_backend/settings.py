@@ -44,7 +44,6 @@ SHELL_PLUS = env('DJANGO_SHELL_PLUS')
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 AUTH_USER_MODEL = 'restapi.User'
-COGNITO_USER_MODEL = 'restapi.User'
 
 ## AWS Cognito Backend Config
 # https://github.com/labd/django-cognito-jwt

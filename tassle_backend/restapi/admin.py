@@ -6,4 +6,5 @@ admin.site.register(Repos)
 admin.site.register(Templates)
 admin.site.register(UserProfile)
 admin.site.register(User)
+admin.site.unregister(User)
 

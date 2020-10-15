@@ -1,6 +1,7 @@
 import uuid
+import logging
 
-from django.contrib.auth.models import PermissionsMixin, UserManager, AbstractUser, BaseUserManager
+from django.contrib.auth.models import PermissionsMixin, UserManager, AbstractUser, AbstractBaseUser, BaseUserManager
 from django.conf import settings
 from django.db import models
 from django.contrib.sites.shortcuts import get_current_site
@@ -11,16 +12,20 @@ from utils.core import get_shortuuid, get_upload_folder, get_template_url
 from utils.render import RenderMixin
 from .exceptions import MissingTemplateOrParams
 
+log = logging.getLogger(__name__)
+
 
 class CustomUserManager(UserManager):
     def get_or_create_for_cognito(self, payload):
-        congito_id = payload['sub']
+        cognito_id = payload['sub']
+        log.debug(f'Valid JWT for sub {cognito_id}')
         user = self.create(
-            congito_id=cognito_id,
+            cognito_id=cognito_id,
             email=payload['email'],
             email_verified=payload['email_verified'],
             is_active=True
         )
+        log.debug(f'get_or_create_cognito returning user {user.pk}')
         return user
 
 class Orgs(models.Model):
@@ -39,12 +44,15 @@ class UserProfile(models.Model):
     last_name = models.CharField(max_length=30, blank=True, null=True)
 
 
-class User(AbstractUser):
+class User(AbstractBaseUser, PermissionsMixin):
     created = models.DateTimeField(auto_now_add=True)
-    cognito_id = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True, editable=False)
+    cognito_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    username = models.CharField(max_length=30, null=True)
     api_token = models.CharField(max_length=100, default=get_shortuuid(length=30))
     email = models.EmailField(max_length=150, unique=True)
     email_verified = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False)
+    is_ative = models.BooleanField(default=True)
 
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'email'
