@@ -19,13 +19,13 @@ class CustomUserManager(UserManager):
     def get_or_create_for_cognito(self, payload):
         cognito_id = payload['sub']
         log.debug(f'Valid JWT for sub {cognito_id}')
-        user = self.create(
+        user, _ = self.get_or_create(
             cognito_id=cognito_id,
             email=payload['email'],
             email_verified=payload['email_verified'],
             is_active=True
         )
-        log.debug(f'get_or_create_cognito returning user {user.pk}')
+        log.debug(f'cognito returning user {user}')
         return user
 
 class Orgs(models.Model):
@@ -52,7 +52,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=150, unique=True)
     email_verified = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-    is_ative = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
 
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'email'

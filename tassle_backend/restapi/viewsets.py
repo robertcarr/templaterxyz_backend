@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
@@ -9,6 +11,8 @@ from restapi.exceptions import MissingTemplateOrParams, TemplateNotFound, Missin
 from utils.render import PlainTextRenderer
 from .models import Templates
 from .serializers import TemplatesSerializer
+
+log = logging.getLogger(__name__)
 
 
 class TemplateViewset(viewsets.ModelViewSet):

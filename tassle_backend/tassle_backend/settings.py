@@ -25,6 +25,7 @@ env = environ.Env(
     DJANGO_DEBUG=(bool, False),
     # DJANGO_SECRET_KEY=(str, get_random_secret_key()),
     ALLOWED_HOSTS=(list, []),
+    DJANGO_LOG_LEVEL=(str, 'INFO'),
     DJANGO_SHELL_PLUS=(str, 'ptpython')
 )
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
@@ -44,6 +45,7 @@ SHELL_PLUS = env('DJANGO_SHELL_PLUS')
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 AUTH_USER_MODEL = 'restapi.User'
+COGNITO_USER_MODEL = AUTH_USER_MODEL
 
 ## AWS Cognito Backend Config
 # https://github.com/labd/django-cognito-jwt
@@ -96,13 +98,15 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_extensions',
     'django_cognito_jwt',
+    'utils',
     'corsheaders',
 ]
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'django_cognito_jwt.JSONWebTokenAuthentication'
-    ]
-}
+        'django_cognito_jwt.JSONWebTokenAuthentication',
+    ],
+ }
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -152,6 +156,31 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING'
+    },
+    'loggers': {
+        'restapi': {
+            'handlers': ['console'],
+            'level': env('DJANGO_LOG_LEVEL'),
+            'propagate': False,
+        },
+    },
+}
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
