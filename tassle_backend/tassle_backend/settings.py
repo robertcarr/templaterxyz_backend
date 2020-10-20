@@ -110,6 +110,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'rest_framework',
+    'rest_framework.authtoken',
     'django_extensions',
     'django_cognito_jwt',
     'utils',
@@ -118,6 +119,7 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
         'django_cognito_jwt.JSONWebTokenAuthentication',
     ],
  }

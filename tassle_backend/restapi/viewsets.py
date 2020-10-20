@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 from rest_framework.decorators import action
 from rest_framework.mixins import ListModelMixin
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_cognito_jwt import JSONWebTokenAuthentication
 from django.db.models import F
@@ -36,7 +37,7 @@ class TemplateViewset(viewsets.ModelViewSet):
     lookup_url_kwarg = 'uuid'
     serializer_class = TemplatesSerializer
     renderer_classes = [PlainTextRenderer, JSONRenderer, PlainTextRenderer]
-    authentication_classes = [JSONWebTokenAuthentication]
+    authentication_classes = [TokenAuthentication, JSONWebTokenAuthentication]
     permission_classes = [IsAuthenticated]
     http_method_names = ['post', 'delete', 'get', 'put']
 

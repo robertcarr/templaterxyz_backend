@@ -20,7 +20,7 @@ class TestAPIAuth(TestCase):
     def test_set_user(self):
         """Set a User"""
         self.assertEqual(self.obj._user, self.user)
-        self.assertEqual(self.obj.api_key, self.user.api_token)
+        self.assertEqual(self.obj.api_key, self.user.auth_token.key)
 
     def test__get_auth_header(self):
         """Do we return proper dict for Auth header?"""
@@ -32,7 +32,7 @@ class TestAPIAuth(TestCase):
     def test__get_user_token(self):
         """ Retrieve user token"""
         token = self.obj._get_user_token(self.user)
-        self.assertEqual(token, getattr(self.user, self.obj.TOKEN_FIELD))
+        self.assertEqual(token, getattr(self.user, self.obj.TOKEN_FIELD).key)
 
     def test__get_user_token_fails(self):
         """We should assert AttributeError if field doesn't exist"""
@@ -68,7 +68,6 @@ class TestAPIAuth(TestCase):
         with self.assertRaises(AssertionError) as e:
             self.obj.api_key
 
-    @skip("Havent implemented API tokens yet, just JWT")
     def test_auth_request(self):
         """Check API Token that requires AUTH to make sure we set header correctly"""
         self.obj.set_user(self.user)

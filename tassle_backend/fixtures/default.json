@@ -101,5 +101,25 @@
         "name": "adfasd",
         "description": "sdfds"
     }
+},
+{
+    "model": "authtoken.token",
+    "pk": "a2492422e2996d80d2c8c316fe732b54f17e477f",
+    "fields": {
+        "user": [
+            "carrenator@gmail.com"
+        ],
+        "created": "2020-10-20T18:49:52.418Z"
+    }
+},
+{
+    "model": "authtoken.token",
+    "pk": "b8de67df900fce991ee2cc61f84b74b83df67585",
+    "fields": {
+        "user": [
+            "rob@test.com"
+        ],
+        "created": "2020-10-20T18:52:23.676Z"
+    }
 }
 ]

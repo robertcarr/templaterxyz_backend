@@ -11,7 +11,7 @@ class APIAdvancedAuth(APIClient):
     Add some additional functionality for authenticating with JWT tokens
     and existing User objects
     """
-    TOKEN_FIELD = 'api_token'
+    TOKEN_FIELD = 'auth_token'
     TOKEN_TYPE = 'Token'
 
     def __init__(self, *args, **kwargs):
@@ -20,7 +20,8 @@ class APIAdvancedAuth(APIClient):
     def _get_user_token(self, user):
         """Get api token from a User object"""
         try:
-            return getattr(user, self.TOKEN_FIELD)
+            token = getattr(user, self.TOKEN_FIELD)
+            return token.key
         except AttributeError:
             raise AttributeError(f'User missing API token {self.TOKEN_FIELD}')
 
@@ -44,8 +45,8 @@ class APIAdvancedAuth(APIClient):
             self._user = user
             self.credentials(**self._get_auth_header())
         else:
+            self.logout()
             self._user = None
             self.credentials()
-            self.logout()
 
 

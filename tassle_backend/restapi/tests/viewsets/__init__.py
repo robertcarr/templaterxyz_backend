@@ -7,3 +7,4 @@ class TestCreate(TestCase):
     """
     Create new templates
     """
+    pass
