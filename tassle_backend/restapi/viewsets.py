@@ -4,15 +4,30 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.mixins import ListModelMixin
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_cognito_jwt import JSONWebTokenAuthentication
+from django.db.models import F
+from jinja2 import exceptions as jinja2_exceptions
 
 from restapi.exceptions import MissingTemplateOrParams, TemplateNotFound, MissingParameters, AccountRequired
 from utils.render import PlainTextRenderer
-from .models import Templates
-from .serializers import TemplatesSerializer
+from .models import Templates, Stats
+from .serializers import TemplatesSerializer, StatsSerializer
 
 log = logging.getLogger(__name__)
+
+
+class StatsViewset(viewsets.ModelViewSet):
+    model = Stats
+    serializer_class = StatsSerializer
+    http_method_names = ['get']
+    permission_classes = [AllowAny]
+
+    def list(self, request):
+        stats = Stats.objects.get(id=1)
+        serializer = StatsSerializer(stats)
+        return Response(serializer.data)
 
 
 class TemplateViewset(viewsets.ModelViewSet):
@@ -20,10 +35,11 @@ class TemplateViewset(viewsets.ModelViewSet):
     lookup_field = 'uuid'
     lookup_url_kwarg = 'uuid'
     serializer_class = TemplatesSerializer
-    renderer_classes = [JSONRenderer, PlainTextRenderer]
+    renderer_classes = [PlainTextRenderer, JSONRenderer, PlainTextRenderer]
     authentication_classes = [JSONWebTokenAuthentication]
     permission_classes = [IsAuthenticated]
     http_method_names = ['post', 'delete', 'get', 'put']
+
 
     def list(self, request):
         """
@@ -35,6 +51,7 @@ class TemplateViewset(viewsets.ModelViewSet):
         #    raise AccountRequired
         # For now just dump all their templates
         serializer = TemplatesSerializer(self.get_queryset(), many=True)
+
         return Response(serializer.data)
 
     def create(self, request, **kwargs):
@@ -50,7 +67,10 @@ class TemplateViewset(viewsets.ModelViewSet):
         """
         t = Templates()
         t.parse_request(request)
-        return Response(t.render(), content_type='text/plain')
+        stats = Stats.objects.filter(id=1)
+        stats.update(templates_rendered=F('templates_rendered')+1)
+        rendered_t = t.render()
+        return Response(rendered_t, content_type='text/plain')
 
     def update(self, request, uuid=None):
         """ Render and Existing Template but with new parameters """
@@ -92,5 +112,22 @@ class TemplateViewset(viewsets.ModelViewSet):
         serializer = TemplatesSerializer(t)
         return Response(serializer.data)
 
+    @action(methods=['get'], detail=True)
+    def dump(self, request, uuid=None):
+        """ Dump the template and params in JSON format"""
+        try:
+            t = Templates.objects.get(uuid=uuid)
+            template_info = {'template': t.template,
+                             'params': t.params}
+            serializer = TemplatesSerializer(t)
+            return Response(t.data)
+        except t.DoesNotExist:
+            raise TemplateNotFound
+
+
     def get_queryset(self):
         return self.model.objects.filter(user=self.request.user)
+
+
+
+

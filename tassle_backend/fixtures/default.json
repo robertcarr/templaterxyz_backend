@@ -1,0 +1,105 @@
+[
+{
+    "model": "restapi.stats",
+    "pk": 1,
+    "fields": {
+        "templates_rendered": 82,
+        "templates_saved": 0
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "uhh75yu12x2x988uxlinakmz7qg5uc2h",
+    "fields": {
+        "session_data": "YmVmMWJiMWM5MmI1NTg5ZWIxN2ZjZDBjMDRhZmQ0ZWJiZGY2YjM1ZDp7Il9hdXRoX3VzZXJfaWQiOiIxIiwiX2F1dGhfdXNlcl9iYWNrZW5kIjoiZGphbmdvLmNvbnRyaWIuYXV0aC5iYWNrZW5kcy5Nb2RlbEJhY2tlbmQiLCJfYXV0aF91c2VyX2hhc2giOiI1NDRmYjlmMDhhOWI0MDJiMTdhZjMxNWRhYzM4NTc2ODM1YjkwZGEzIn0=",
+        "expire_date": "2020-10-29T13:30:50.543Z"
+    }
+},
+{
+    "model": "sites.site",
+    "pk": 1,
+    "fields": {
+        "domain": "example.com",
+        "name": "example.com"
+    }
+},
+{
+    "model": "restapi.user",
+    "pk": 1,
+    "fields": {
+        "password": "pbkdf2_sha256$150000$ZHyrz0ISJ8JS$LcwEnHzDQUKA28Dy0OZlwzsLNRKOPIjG2d5O82gIxO4=",
+        "last_login": "2020-10-15T13:30:50.538Z",
+        "is_superuser": true,
+        "created": "2020-10-15T13:30:37.472Z",
+        "cognito_id": "9017c948-be86-41f8-bfa8-76d5e3c0d8c4",
+        "username": "rob",
+        "api_token": "K52nhZZWUxHz3JmQtRTyX2ThKeUGJU",
+        "email": "rob@test.com",
+        "email_verified": false,
+        "is_staff": true,
+        "is_active": true,
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "restapi.user",
+    "pk": 2,
+    "fields": {
+        "password": "",
+        "last_login": null,
+        "is_superuser": false,
+        "created": "2020-10-15T16:00:20.534Z",
+        "cognito_id": "d9413e7c-1d04-47f7-ad35-12374fb6d25f",
+        "username": null,
+        "api_token": "qCfCzcPXJzfuKoW5RCqWoFJPLJ7k9e",
+        "email": "carrenator@gmail.com",
+        "email_verified": true,
+        "is_staff": false,
+        "is_active": true,
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "restapi.userprofile",
+    "pk": 1,
+    "fields": {
+        "user": [
+            "rob@test.com"
+        ],
+        "first_name": null,
+        "last_name": null
+    }
+},
+{
+    "model": "restapi.userprofile",
+    "pk": 2,
+    "fields": {
+        "user": [
+            "carrenator@gmail.com"
+        ],
+        "first_name": null,
+        "last_name": null
+    }
+},
+{
+    "model": "restapi.templates",
+    "pk": 1,
+    "fields": {
+        "created": "2020-10-20T15:42:44.948Z",
+        "modified": "2020-10-20T15:42:44.948Z",
+        "uuid": "gn5KYBNbqM4d9jLUzAPQEc",
+        "repo": null,
+        "user": [
+            "carrenator@gmail.com"
+        ],
+        "template": "gn5KYBNbqM4d9jLUzAPQEc/t.j2",
+        "params": "gn5KYBNbqM4d9jLUzAPQEc/params.json",
+        "public": false,
+        "purge": false,
+        "name": "adfasd",
+        "description": "sdfds"
+    }
+}
+]

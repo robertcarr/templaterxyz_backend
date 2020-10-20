@@ -42,3 +42,10 @@ class AccountRequired(APIException):
     status_code = 400
     default_detail = 'You must create an account to access this'
     default_code = 'account_required'
+
+
+class MissingTemplateParameters(APIException):
+    """ Raised when trying to render a template that is missing parameters"""
+    status_code = 400
+    default_detail = "Your template is missing one or more parameters"
+    default_code = 'parameters_missing'

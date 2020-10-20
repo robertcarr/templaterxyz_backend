@@ -26,6 +26,7 @@ env = environ.Env(
     # DJANGO_SECRET_KEY=(str, get_random_secret_key()),
     ALLOWED_HOSTS=(list, []),
     DJANGO_LOG_LEVEL=(str, 'INFO'),
+    AWS_EXECUTION_ENV=(str, None),
     DJANGO_SHELL_PLUS=(str, 'ptpython')
 )
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
@@ -80,9 +81,12 @@ STATICFILES_STORAGE = DEFAULT_FILE_STORAGE
 # Default to standard django sqlite file DB if environment variable not set
 
 # Use default sqlite3 database unless you have DATABASE_URL environment set
+# TODO: Fix this. It's a hacky way to use local sqlite and correct DB when deployed
 try:
-    #DATABASES = {'default': {}}
-    DATABASES = {'default': env.db()}
+    if env('AWS_EXECUTION_ENV'):
+        DATABASES = {'default': env.db()}
+    else:
+        raise environ.ImproperlyConfigured
 except environ.ImproperlyConfigured:
     DATABASES = {'default': environ.Env().db_url_config('sqlite:///' + os.path.join(BASE_DIR, 'db.sqlite3'))}
 #
@@ -92,7 +96,9 @@ except environ.ImproperlyConfigured:
 #    }
 # }
 #
-
+FIXTURE_DIRS = (
+    f'{BASE_DIR}/fixtures/',
+)
 INSTALLED_APPS = [
     'grappelli',
     'restapi',

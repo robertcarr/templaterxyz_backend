@@ -1,8 +1,10 @@
 # API Endpoint mapping to Viewsets
 
+from django.urls import path, include
+
 from utils.routers import OptionalSlashRouter
-from .viewsets import TemplateViewset
+from .viewsets import TemplateViewset, StatsViewset
 
 router = OptionalSlashRouter()
-router.register(r'', TemplateViewset, basename='template')
-router.register(r'', TemplateViewset, basename='template')
+router.register(r'stats/', StatsViewset, basename='stats')
+router.register(r'^$', TemplateViewset, basename='template')

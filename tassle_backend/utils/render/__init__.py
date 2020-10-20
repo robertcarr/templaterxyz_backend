@@ -1,10 +1,12 @@
 import json
 
 import jinja2
+from jinja2 import Template, StrictUndefined
+from jinja2.exceptions import UndefinedError
 from rest_framework import renderers
 from django.utils.encoding import smart_text
 
-from restapi.exceptions import InvalidParameterFormat
+from restapi.exceptions import InvalidParameterFormat, MissingParameters
 
 
 class RenderMixin:
@@ -45,17 +47,31 @@ class RenderMixin:
             raise InvalidParameterFormat
         return params
 
-    def render(self, params=None):
+    def render_string(self, template, params):
+        """
+        Render a template as string with dict params
+        :param template:
+        :param params:
+        :return: merged template as string
+        """
+        t = jinja2.Template(template)
+        return t.render(params)
+
+    def render(self, params=None, undefined=StrictUndefined):
         """
         :return: render template as String
 
         TODO: More error checking and possibilities here
         """
-        t = jinja2.Template(self._read_template())
-        if params:
-            self._rendered_template = t.render(params)
-        else:
-            self._rendered_template = t.render(self._read_params())
+        # undefined=StrictUndefined
+        t = Template(self._read_template(), undefined=undefined)
+        try:
+            if params:
+                self._rendered_template = t.render(params)
+            else:
+                self._rendered_template = t.render(self._read_params())
+        except UndefinedError as e:
+            raise MissingParameters(e)
         return self._rendered_template
 
 
@@ -64,7 +80,6 @@ class PlainTextRenderer(renderers.BaseRenderer):
     Return plain/text response body that handles NEWLINE instead of printing /n
     """
     media_type = 'text/plain'
-    format = 'txt'
 
     def render(self, data, media_type=None, renderer_context=None):
         return smart_text(data, encoding=self.charset)

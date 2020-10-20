@@ -28,11 +28,24 @@ class CustomUserManager(UserManager):
         log.debug(f'cognito returning user {user}')
         return user
 
+
 class Orgs(models.Model):
     """
     Basic Orgs
     """
     name = models.CharField(max_length=150, blank=False)
+
+
+class Stats(models.Model):
+    """
+    Keep some basic stats
+    """
+    templates_rendered = models.BigIntegerField(default=0, blank=False)
+    templates_saved = models.BigIntegerField(default=0)
+
+    class Meta:
+        verbose_name = 'Stats'
+        verbose_name_plural = 'Stats'
 
 
 class UserProfile(models.Model):
