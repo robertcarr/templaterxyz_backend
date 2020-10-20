@@ -4,7 +4,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 from rest_framework.decorators import action
-from rest_framework.mixins import ListModelMixin
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_cognito_jwt import JSONWebTokenAuthentication
@@ -129,6 +129,23 @@ class TemplateViewset(viewsets.ModelViewSet):
     def get_queryset(self):
         return self.model.objects.filter(user=self.request.user)
 
+
+class TemplateDetailViewset(RetrieveModelMixin, viewsets.GenericViewSet):
+    """
+    Handle a specific Template by UUID
+    """
+    lookup_value_regex = '[0-9a-zA-Z]{22}'
+    lookup_url_kwarg = 'uuid'
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def retrieve(self, request, uuid=None, **kwargs):
+        try:
+            t = Templates.objects.get(uuid=uuid)
+            serializer = TemplatesSerializer(t)
+        except t.DoesNotExist:
+            raise TemplateNotFound
+        return Response(serializer.data)
 
 
 
