@@ -8,6 +8,20 @@ from django.utils.encoding import smart_text
 
 from restapi.exceptions import InvalidParameterFormat, MissingParameters
 
+class BaseTemplateRenderer:
+    """
+
+    """
+    def __init__(self, *args, **kwargs):
+        self._template = kwargs.pop('template', None)
+
+    def render(self, params):
+        """
+        Render the template with a set of JSON parameters
+        :param params:  Dict of Parameters
+        :return: string of merged template
+        """
+
 
 class RenderMixin:
     """

@@ -1,10 +1,13 @@
 import logging
 
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, APIRequestFactory, APITestCase
+from django.test import RequestFactory
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 
 log = logging.getLogger(__name__)
 
+User = get_user_model()
 
 class APIAdvancedAuth(APIClient):
     """
@@ -16,6 +19,8 @@ class APIAdvancedAuth(APIClient):
 
     def __init__(self, *args, **kwargs):
         super(APIAdvancedAuth, self).__init__(*args, **kwargs)
+        self.factory = APIRequestFactory()
+        self.factory.user = AnonymousUser()
 
     def _get_user_token(self, user):
         """Get api token from a User object"""
@@ -43,10 +48,23 @@ class APIAdvancedAuth(APIClient):
         log.debug(f'Setting API Client User={user}')
         if user:
             self._user = user
+            self.factory.user = user
             self.credentials(**self._get_auth_header())
         else:
             self.logout()
             self._user = None
+            self.factory.user = AnonymousUser()
             self.credentials()
 
+
+class APIAuthTestCase(APITestCase):
+    """
+    Add User and replace client with APIAdvancedAuth for drf APITestCase
+    """
+    client_class = APIAdvancedAuth
+
+    def __init__(self, *args, **kwargs):
+        super(APIAuthTestCase, self).__init__(*args, **kwargs)
+        self.client = APIAdvancedAuth()
+        self.User = User
 

@@ -1,9 +1,11 @@
 import json
 
 from django.conf import settings
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
+from rest_framework.test import APIRequestFactory
 from unittest import skip
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 
 from utils.drf import APIAdvancedAuth
 
@@ -74,3 +76,26 @@ class TestAPIAuth(TestCase):
         resp = self.obj.get('/api/')
         self.assertEqual(resp.status_code, 200, resp.content)
 
+
+class TestRequestFactory(TestCase):
+    """We include RequestFactory Instance() in the object"""
+    fixtures = ['default']
+
+    def setUp(self):
+        self.obj = APIAdvancedAuth()
+        self.user = User.objects.get(pk=1)
+
+    def test_has_factory(self):
+        self.assertIsInstance(self.obj.factory, APIRequestFactory)
+
+    def test_init_is_anonymous(self):
+        self.assertEqual(self.obj.factory.user, AnonymousUser())
+
+    def test_set_user_sets_factory_user(self):
+        """Do we set obj.factory.user correctly?"""
+        self.obj.set_user(self.user)
+        self.assertEqual(self.obj.factory.user, self.user)
+
+    def test_unset_user_to_anonymous(self):
+        self.obj.set_user() # unset user
+        self.assertEqual(self.obj.factory.user, AnonymousUser())

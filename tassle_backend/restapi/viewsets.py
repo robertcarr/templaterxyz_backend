@@ -100,7 +100,7 @@ class TemplateViewset(viewsets.ModelViewSet):
         return Response(t.get_template, content_type='text/plain')
 
     @action(methods=['post'], detail=False)
-    def edit(self, request, *kwargs):
+    def save(self, request, *kwargs):
         """
         User wants to edit a template so we return the details & URL
         :param request:
@@ -111,7 +111,7 @@ class TemplateViewset(viewsets.ModelViewSet):
         t.parse_request(request)
         t.save()
         serializer = TemplatesSerializer(t)
-        return Response(serializer.data)
+        return Response({'url': t.get_url() })
 
     @action(methods=['get'], detail=True)
     def dump(self, request, uuid=None):
@@ -140,6 +140,7 @@ class TemplateDetailViewset(RetrieveModelMixin, viewsets.GenericViewSet):
     permission_classes = [AllowAny]
 
     def retrieve(self, request, uuid=None, **kwargs):
+
         try:
             t = Templates.objects.get(uuid=uuid)
             serializer = TemplatesSerializer(t)
