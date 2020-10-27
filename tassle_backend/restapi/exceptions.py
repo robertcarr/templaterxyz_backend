@@ -39,7 +39,7 @@ class MissingParameters(APIException):
 
 class AccountRequired(APIException):
     """ Raised when trying to access a feature that requires account """
-    status_code = 400
+    status_code = 401
     default_detail = 'You must create an account to access this'
     default_code = 'account_required'
 

@@ -7,14 +7,24 @@ from django.core.files.base import ContentFile
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 
+from restapi.models import Templates
 
 class TestConfig:
     """
     Easier Config Handling.
 
     init(user=[<key>|<id>]
+
+
     """
     cfg = {
+        'template': {'pk': 1,
+                     'file': {'name': 'test.t2',
+                              'content': ContentFile('''My name is {{ name }}''')
+                              }},
+        'params': {'file': {'name': 'params.json',
+                            'content': ContentFile(json.dumps(dict({'name': 'test_user'})))
+                            }},
         'users': {
             'admin': {'pk': 1},
             'default': {'pk': 1}
@@ -26,6 +36,24 @@ class TestConfig:
         self.uid = None
         self.user = AnonymousUser
         self.settings = None
+        self.set_template()
+
+    @property
+    def template(self):
+        return self.cfg['template']['file']
+
+    @property
+    def params(self):
+        return self.cfg['params']['file']
+
+    def set_template(self, pk=None):
+        """Set the active template to use, set to default cfg if not supplied"""
+        if not pk:
+            pk = self.cfg['template']['pk']
+        self.Template = Templates.objects.get(pk=pk)
+
+    def set_user(self, user=None):
+        self._set_user(user)
 
     def _set_user(self, user=None):
         """Set the current user, default to Anon"""
@@ -39,6 +67,3 @@ class TestConfig:
         if uid:
             self.uid = uid
             self.user = self.User.objects.get(pk=uid)
-
-
-

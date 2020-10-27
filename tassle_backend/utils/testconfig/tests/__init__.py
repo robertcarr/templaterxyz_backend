@@ -1,7 +1,9 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
+from django.core.files.base import ContentFile
 
+from restapi.models import Templates
 from utils.testconfig import TestConfig
 
 
@@ -36,3 +38,35 @@ class TestConfigClass(TestCase):
     def test__set_user_additional_cfg_default_none(self):
         """settings set to None for no user"""
         self.assertIsNone(self.obj.settings)
+
+    def test_set_user(self):
+        """Public Method for setting user"""
+        self.obj.set_user('admin')
+        self.assertEqual(self.obj.uid, self.obj.cfg['users']['admin']['pk'])
+
+
+class TestConfigTemplates(TestCase):
+    """
+    Make sure we can access template & parameter content in the config
+    """
+    fixtures = ['default']
+
+    def setUp(self):
+        self.obj = TestConfig()
+
+    def test_get_template(self):
+        t = self.obj.template
+        self.assertIsInstance(t['content'], ContentFile)
+
+    def test_get_params(self):
+        p = self.obj.params
+        self.assertIsInstance(p['content'], ContentFile)
+
+    def test_template_init(self):
+        """Default template set"""
+        self.assertIsInstance(self.obj.Template, Templates)
+
+    def test_set_template(self):
+        """Set to specific pk"""
+        self.obj.set_template(2)
+        self.assertEqual(self.obj.Template.pk, 2)

@@ -103,6 +103,25 @@
     }
 },
 {
+    "model": "restapi.templates",
+    "pk": 2,
+    "fields": {
+        "created": "2020-10-27T16:15:04.230Z",
+        "modified": "2020-10-27T16:15:04.230Z",
+        "uuid": "egLRvtJEMhSeDJKjsuEBxG",
+        "repo": null,
+        "user": [
+            "carrenator@gmail.com"
+        ],
+        "template": "egLRvtJEMhSeDJKjsuEBxG/t.j2",
+        "params": "egLRvtJEMhSeDJKjsuEBxG/params.json",
+        "public": false,
+        "purge": false,
+        "name": "tester",
+        "description": "flahg"
+    }
+},
+{
     "model": "authtoken.token",
     "pk": "a2492422e2996d80d2c8c316fe732b54f17e477f",
     "fields": {

@@ -38,7 +38,7 @@ class TemplateViewset(viewsets.ModelViewSet):
     serializer_class = TemplatesSerializer
     renderer_classes = [PlainTextRenderer, JSONRenderer, PlainTextRenderer]
     authentication_classes = [TokenAuthentication, JSONWebTokenAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     http_method_names = ['post', 'delete', 'get', 'put']
 
 
@@ -48,8 +48,8 @@ class TemplateViewset(viewsets.ModelViewSet):
         :param requset:
         :return:
         """
-        #if request.user.is_anonymous:
-        #    raise AccountRequired
+        if request.user.is_anonymous:
+            raise AccountRequired
         # For now just dump all their templates
         serializer = TemplatesSerializer(self.get_queryset(), many=True)
 
@@ -124,7 +124,6 @@ class TemplateViewset(viewsets.ModelViewSet):
             return Response(t.data)
         except t.DoesNotExist:
             raise TemplateNotFound
-
 
     def get_queryset(self):
         return self.model.objects.filter(user=self.request.user)

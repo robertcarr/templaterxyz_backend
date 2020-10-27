@@ -143,6 +143,9 @@ class Templates(models.Model, RenderMixin):
         """ Return the full URL of the action request (e.g. template-list) """
         return reverse_lazy(action, request=request)
 
+    def __str__(self):
+        return f'{self.uuid}'
+
     class Meta:
         verbose_name = 'Templates'
         verbose_name_plural = 'Templates'
