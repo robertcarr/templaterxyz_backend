@@ -16,18 +16,25 @@ class TestEdit(APIAuthTestCase):
 
     def setUp(self):
         self.t = TestConfig()
-        self.template = Templates.objects.get(pk=1)
-
+        self.t.set_user('default')
+        self.url = reverse('template-save')
 
     def test_save_template_returns_url_user(self):
         """Can I save template as a Authenticated User and get a url back?"""
 
-        self.client.set_user(self.User.objects.get(pk=1))
-        url = reverse('template-save')
-        resp = self.client.post(url,
-                         {'template': self.t.template['content'],
-                          'params':  self.t.params['content']
+        resp = self.client.post(self.url,
+                         {'template': self.t.get_template_file(),
+                          'params':  self.t.get_params_file()
                           } )
         self.assertEqual(resp.status_code, 200, resp.data)
         self.assertTrue('url' in resp.data )
+
+    def test_save_template_returns_non_auth(self):
+        """Can I save a template without auth?"""
+        self.client.set_user()
+        resp = self.client.post(self.url,
+                                {'template': self.t.get_template_file(),
+                                 'params': self.t.get_params_file()})
+        self.assertEqual(resp.status_code, 200, resp.data)
+        self.assertTrue('url' in resp.data)
 

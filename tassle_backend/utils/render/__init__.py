@@ -1,10 +1,13 @@
 import json
+import logging
 
 import jinja2
-from jinja2 import Template, StrictUndefined
+from jinja2 import Template as JinjaTemplate, StrictUndefined
 from jinja2.exceptions import UndefinedError
 from rest_framework import renderers
 from django.utils.encoding import smart_text
+from django.core.files.base import ContentFile, File
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from restapi.exceptions import InvalidParameterFormat, MissingParameters
 
@@ -22,6 +25,7 @@ class BaseTemplateRenderer:
         :return: string of merged template
         """
 
+log = logging.getLogger(__name__)
 
 class RenderMixin:
     """
@@ -36,6 +40,55 @@ class RenderMixin:
     def get_params(self):
         return self._read_params()
 
+    def from_file(self, fileobj, encoding='utf-8'):
+        """
+        Decode from file back into string
+        :param fileobj: File object
+        :param encoding:
+        :return: string
+        """
+        assert (isinstance(fileobj, File)), "Must be File type object"
+        with fileobj.open() as f:
+            contents = f.read()
+        if isinstance(contents, bytes):
+            return contents.decode(encoding)
+        else:
+            return contents
+        #return fileobj.read()
+
+    def to_file(self, data, encoding='utf-8'):
+        """
+        Returns a ContentFile from the string of data
+        :param data: string
+        :return: ContentFile
+        """
+        assert (isinstance(data, str)), "Must be String"
+        return ContentFile(data)
+
+    def _parse_query_params(self, request):
+        """
+        Take the submitted queryparams data and return the template and params as a string
+        :param request:
+        :return: (template string, params as Dict)
+        """
+        # Accept Files named 'template' or 't' for short, 'params' and 'p'
+        template_data = request.data.get('template', request.data.get('t'))
+        param_data = request.data.get('params', request.data.get('p'))
+
+        if isinstance(template_data, list):
+            template_data = template_data[0]
+        #if isinstance(param_data, dict):
+        #    param_data = json.dumps(param_data)
+        if isinstance(template_data, File):
+            template_data = self.from_file(template_data)
+        if isinstance(param_data, File):
+            param_data = self.from_file(param_data)
+        if isinstance(param_data, str):
+            param_data = json.loads(param_data)
+
+        # Return Boolean for template_data param_data if they had value submitted
+        return (template_data, param_data)
+
     def _update_params(self, param_file):
         """ Update the params file object """
         self.params = param_file
@@ -43,51 +96,67 @@ class RenderMixin:
     def _read_template(self):
         """ Read in raw template from storage and return text of template """
         # Reset to beginning of file if it's been read already
+        return self.from_file(self.template)
+
         if self.template.tell() > 0:
             self.template.seek(0)
         template = self.template.read().decode('utf-8')
-        self.template.seek(0) # return to beginning
+        self.template.seek(0)  # return to beginning
         return template
 
     def _read_params(self):
         """Read parameters from storage and return as DICT """
-        if self.params.tell() > 0:
-            self.params.seek(0)
-        params = self.params.read().decode('utf-8')
-        self.params.seek(0)
+        params = self.from_file(self.params)
+
+       # if self.params.tell() > 0:
+       #     self.params.seek(0)
+       # params = self.params.read().decode('utf-8')
+       # log.error(f'Params={params}')
+       # self.params.seek(0)
         try:
             params = json.loads(params)
         except json.JSONDecodeError:
-            raise InvalidParameterFormat
+            raise InvalidParameterFormat(params)
         return params
+
+    def _render_template(self, template, params):
+        """
+        Actually Renders the template with parameters
+        :param template: String
+        :param params:  Dict
+        :return:  String of rendered template
+        """
+        assert isinstance(params, dict), f'Params not a valid Dict: {params}'
+        assert isinstance(template, str), f'Template must be string: {template}'
+        try:
+            rendered_template = jinja2.Template(template).render(params)
+        except UndefinedError as e:
+            raise MissingParameters
+        return rendered_template
 
     def render_string(self, template, params):
         """
         Render a template as string with dict params
         :param template:
-        :param params:
+        :param params: Dict
         :return: merged template as string
         """
-        t = jinja2.Template(template)
-        return t.render(params)
+        return self._render_template(template, params)
 
     def render(self, params=None, undefined=StrictUndefined):
         """
+        Takes a Dict of params and re-renders the already existing Template
+
+        :param params: Dict of Jinja Params to replace, re-rendering using existing params if none supplied
         :return: render template as String
 
         TODO: More error checking and possibilities here
         """
-        # undefined=StrictUndefined
-        t = Template(self._read_template(), undefined=undefined)
-        try:
-            if params:
-                self._rendered_template = t.render(params)
-            else:
-                self._rendered_template = t.render(self._read_params())
-        except UndefinedError as e:
-            raise MissingParameters(e)
-        return self._rendered_template
+        if not params:
+            params = self._read_params()
+        template = self._read_template()
 
+        return self.render_string(template, params)
 
 class PlainTextRenderer(renderers.BaseRenderer):
     """

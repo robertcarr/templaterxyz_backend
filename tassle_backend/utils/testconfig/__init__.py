@@ -2,6 +2,9 @@
 Common/Useful Configuration Parameters for Unittests
 """
 import json
+from functools import reduce
+
+from jinja2 import Template as JinjaTemplate
 
 from django.core.files.base import ContentFile
 from django.contrib.auth import get_user_model
@@ -18,7 +21,10 @@ class TestConfig:
 
     """
     cfg = {
+        't': 'my name is {{ name }}',
+        'p': '{"name": "joe"}',
         'template': {'pk': 1,
+                     'uuid': 'egLRvtJEMhSeDJKjsuEBxG',
                      'file': {'name': 'test.t2',
                               'content': ContentFile('''My name is {{ name }}''')
                               }},
@@ -37,6 +43,7 @@ class TestConfig:
         self.user = AnonymousUser
         self.settings = None
         self.set_template()
+        self._Templates = Templates
 
     @property
     def template(self):
@@ -46,11 +53,30 @@ class TestConfig:
     def params(self):
         return self.cfg['params']['file']
 
+    def get_template_file(self):
+        """Return file for testing"""
+        f = ContentFile(self.cfg['t'])
+        f.name = 'test.t2'
+        return f
+
+    def get_params_file(self):
+        """ return param file for testing"""
+        f = ContentFile(self.cfg['p'])
+        f.name = 'params.json'
+        return f
+
     def set_template(self, pk=None):
         """Set the active template to use, set to default cfg if not supplied"""
         if not pk:
             pk = self.cfg['template']['pk']
         self.Template = Templates.objects.get(pk=pk)
+
+    @property
+    def fake_render(self):
+        """return concat strings as if we rendered it"""
+        t = JinjaTemplate(self.cfg['t'])
+        ret = t.render(json.loads(self.cfg['p']))
+        return ret
 
     def set_user(self, user=None):
         self._set_user(user)
@@ -67,3 +93,4 @@ class TestConfig:
         if uid:
             self.uid = uid
             self.user = self.User.objects.get(pk=uid)
+

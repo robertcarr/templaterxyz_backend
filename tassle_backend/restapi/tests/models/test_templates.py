@@ -1,11 +1,13 @@
 from django.test import TestCase
 
-from restapi import models
+from restapi.models import Templates
+from utils.testconfig import TestConfig
 
 
 class TestTemplates(TestCase):
     fixtures = ['default']
 
     def setUp(self):
-        self.obj = models.Templates.get(pk=1)
+        self.t = TestConfig()
+
 

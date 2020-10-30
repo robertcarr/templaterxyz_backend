@@ -1,3 +1,6 @@
+import json
+
+from jinja2 import Template as JinjaTemplate
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
@@ -13,6 +16,13 @@ class TestConfigClass(TestCase):
 
     def setUp(self):
         self.obj = TestConfig()
+
+    def test_fake_render(self):
+        """Do we get a fake rendering?"""
+        ret = self.obj.fake_render
+        t = JinjaTemplate(self.obj.cfg['t'])
+        rendered_template = t.render(json.loads(self.obj.cfg['p']))
+        self.assertEqual(ret, rendered_template)
 
     def test__set_user_anonymous(self):
         """Anon User"""

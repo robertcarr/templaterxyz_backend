@@ -1,10 +1,11 @@
+import json
 import logging
 
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 from rest_framework.decorators import action
-from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, CreateModelMixin, DestroyModelMixin
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_cognito_jwt import JSONWebTokenAuthentication
@@ -41,7 +42,6 @@ class TemplateViewset(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
     http_method_names = ['post', 'delete', 'get', 'put']
 
-
     def list(self, request):
         """
         If logged in, return your some template details otherwise raise exception
@@ -67,10 +67,10 @@ class TemplateViewset(viewsets.ModelViewSet):
         :return:
         """
         t = Templates()
-        t.parse_request(request)
+        (template, params) = t.parse_request(request)
         stats = Stats.objects.filter(id=1)
-        stats.update(templates_rendered=F('templates_rendered')+1)
-        rendered_t = t.render()
+        stats.update(templates_rendered=F('templates_rendered') + 1)
+        rendered_t = t.render_string(template, params)
         return Response(rendered_t, content_type='text/plain')
 
     def update(self, request, uuid=None):
@@ -111,7 +111,7 @@ class TemplateViewset(viewsets.ModelViewSet):
         t.parse_request(request)
         t.save()
         serializer = TemplatesSerializer(t)
-        return Response({'url': t.get_url() })
+        return Response({'url': t.get_url()})
 
     @action(methods=['get'], detail=True)
     def dump(self, request, uuid=None):
@@ -129,23 +129,46 @@ class TemplateViewset(viewsets.ModelViewSet):
         return self.model.objects.filter(user=self.request.user)
 
 
-class TemplateDetailViewset(RetrieveModelMixin, viewsets.GenericViewSet):
+class TemplateDetailViewset(DestroyModelMixin, viewsets.GenericViewSet):
     """
     Handle a specific Template by UUID
+
+    GET: Return Template & Metadata
+    POST: Rerender with new params
+    PUT: Update existing template
+    DELETE: Delete
     """
+    http_method_names = ['post', 'get', 'delete', 'put']
     lookup_value_regex = '[0-9a-zA-Z]{22}'
     lookup_url_kwarg = 'uuid'
+    lookup_field = 'uuid'
     authentication_classes = []
     permission_classes = [AllowAny]
+    queryset = Templates.objects.all()
+
+    def post(self, request, uuid=None, **kwargs):
+        """Creating on an existing Template should render the template with new params"""
+        try:
+            t = Templates.objects.get(uuid=uuid)
+        except Templates.DoesNotExist:
+            raise TemplateNotFound
+
+        (template_data, param_data) = t._parse_query_params(request)
+        log.error(f'Params={param_data}')
+
+        try:
+            rendered_template = t.render(param_data)
+            return Response(rendered_template, content_type='text/plain', status=200)
+        except KeyError:
+            raise MissingParameters
 
     def retrieve(self, request, uuid=None, **kwargs):
-
+        # TODO: Check ownership
         try:
             t = Templates.objects.get(uuid=uuid)
             serializer = TemplatesSerializer(t)
         except t.DoesNotExist:
             raise TemplateNotFound
-        return Response(serializer.data)
-
+        return Response(serializer.data, content_type='application/json')
 
 

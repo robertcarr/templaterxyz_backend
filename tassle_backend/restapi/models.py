@@ -1,9 +1,12 @@
+import json
 import uuid
 import logging
 
 from django.contrib.auth.models import PermissionsMixin, UserManager, AbstractUser, AbstractBaseUser, BaseUserManager
 from django.conf import settings
 from django.db import models
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.files.base import ContentFile
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.sites.models import Site
 from rest_framework.reverse import reverse, reverse_lazy
@@ -113,12 +116,53 @@ class Templates(models.Model, RenderMixin):
     description = models.TextField(blank=True, null=True)
 
     def parse_request(self, request):
-        """ Takes request and modifies the template instance with User, Files """
+        """ Takes request and modifies the template instance with User, Files
+        returns (template, params) as strings
+         """
         if request.user.is_anonymous:
             self.user = None
         else:
             self.user = request.user
-        self.merge_files(request)
+        #self.merge_files(request)
+        return self._parse_query_params(request)
+        #return self._parse_request_params(request)
+
+
+    def _parse_request_params(self, request, raise_for=None):
+        """
+        Take incoming params and handle them by precedence
+        1. If Files, use those first
+        2. If not files, look for content body parameters
+
+        Since the submitted template and params are stored in a django models.File we
+        need to coerce the params into a compatible file if they aren't submitted as Files.
+        :return: None
+        """
+       # Accept Files named 'template' or 't' for short, 'params' and 'p'
+        template_data = request.data.get('template', request.data.get('t'))
+        param_data = request.data.get('params', request.data.get('p'))
+
+        if isinstance(template_data, list):
+            template_data = template_data[0]
+        if isinstance(template_data, str):
+            template_data = ContentFile(template_data.encode('utf-8'))
+            template_data.name = 'template'
+        if isinstance(param_data, dict):
+            param_data = json.dumps(param_data)
+        if isinstance(param_data, str):
+            param_data = ContentFile(param_data.encode('utf-8'))
+            param_data.name = 'params'
+        if template_data:
+            self.template = template_data
+            self.template.name = template_data.name
+        if param_data:
+            self.params = param_data
+
+        # Do we require a template passed in?
+        if not self.template and raise_for == 'template':
+            raise MissingTemplateOrParams
+        # Return Boolean for template_data param_data if they had value submitted
+        return (template_data is not None, param_data is not None)
 
     def merge_files(self, request):
         """

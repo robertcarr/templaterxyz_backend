@@ -44,12 +44,32 @@ class TestTemplateRender(APIAuthTestCase):
         self.url = reverse('template-list')
 
     def test_post_template(self):
-        """Can we render?"""
+        """Can we render a new Template as files?"""
         resp = self.client.post(self.url,
-                                {'template': self.t.template['content'],
-                                 'params': self.t.params['content']
+                                {'template': self.t.get_template_file(),
+                                 'params': self.t.get_params_file()
                                  })
         self.assertEqual(resp.status_code, 200, resp.data)
-        self.assertEqual(resp.data, 'My name is test_user')
+        self.assertEqual(resp.data, self.t.fake_render)
         self.assertEqual(resp.content_type, 'text/plain')
 
+
+    def test_post_template_short(self):
+        """Can we render new template using t= and p= instead of template and params?"""
+        resp = self.client.post(self.url,
+                                {'t': self.t.get_template_file(),
+                                 'p': self.t.get_params_file()
+                                 })
+        self.assertEqual(resp.status_code, 200, resp.data)
+        self.assertEqual(resp.data, self.t.fake_render)
+        self.assertEqual(resp.content_type, 'text/plain')
+
+    def test_post_template_file_params_as_content(self):
+        """Can I post a template and params as content instead of file?"""
+        resp = self.client.post(self.url,
+                                {'t': 'my name is {{ name }}',
+                                 'p': {'name': 'joe'}
+                                 }, format='json')
+        self.assertEqual(resp.status_code, 200, resp.data)
+        self.assertEqual(resp.data, self.t.fake_render)
+        self.assertEqual(resp.content_type, 'text/plain')

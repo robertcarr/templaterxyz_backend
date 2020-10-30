@@ -66,5 +66,8 @@ class APIAuthTestCase(APITestCase):
     def __init__(self, *args, **kwargs):
         super(APIAuthTestCase, self).__init__(*args, **kwargs)
         self.client = APIAdvancedAuth()
-        self.User = User
+        self.User = User  # get_user_model Class
 
+    def set_user(self, user=None):
+        """ pass through to self.client.set_user"""
+        self.client.set_user(user)
