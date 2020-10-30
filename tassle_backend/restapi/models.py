@@ -115,69 +115,16 @@ class Templates(models.Model, RenderMixin):
     name = models.CharField(max_length=100, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
 
-    def parse_request(self, request):
-        """ Takes request and modifies the template instance with User, Files
-        returns (template, params) as strings
-         """
-        if request.user.is_anonymous:
-            self.user = None
-        else:
-            self.user = request.user
-        #self.merge_files(request)
-        return self._parse_query_params(request)
-        #return self._parse_request_params(request)
+    @property
+    def is_public(self):
+        """Is this accessible to anyone?"""
+        return self.public
 
-
-    def _parse_request_params(self, request, raise_for=None):
-        """
-        Take incoming params and handle them by precedence
-        1. If Files, use those first
-        2. If not files, look for content body parameters
-
-        Since the submitted template and params are stored in a django models.File we
-        need to coerce the params into a compatible file if they aren't submitted as Files.
-        :return: None
-        """
-       # Accept Files named 'template' or 't' for short, 'params' and 'p'
-        template_data = request.data.get('template', request.data.get('t'))
-        param_data = request.data.get('params', request.data.get('p'))
-
-        if isinstance(template_data, list):
-            template_data = template_data[0]
-        if isinstance(template_data, str):
-            template_data = ContentFile(template_data.encode('utf-8'))
-            template_data.name = 'template'
-        if isinstance(param_data, dict):
-            param_data = json.dumps(param_data)
-        if isinstance(param_data, str):
-            param_data = ContentFile(param_data.encode('utf-8'))
-            param_data.name = 'params'
-        if template_data:
-            self.template = template_data
-            self.template.name = template_data.name
-        if param_data:
-            self.params = param_data
-
-        # Do we require a template passed in?
-        if not self.template and raise_for == 'template':
-            raise MissingTemplateOrParams
-        # Return Boolean for template_data param_data if they had value submitted
-        return (template_data is not None, param_data is not None)
-
-    def merge_files(self, request):
-        """
-        Merge files from the request into this instance.
-        We want to handle the template and optionally the params
-
-        :param request:
-        :return: None
-        """
-        try:
-            self.template = request.FILES['template']
-            self.name = request.FILES['template'].name
-            self.params = request.FILES['params']
-        except KeyError:
-            raise MissingTemplateOrParams
+    def is_owner(self, user):
+        """Is the user the owner of the of the Template?"""
+        if user == self.user:
+            return True
+        return False
 
     def get_url(self, request=None):
         """ Return a URL for this object - Not the direct S3 Object"""

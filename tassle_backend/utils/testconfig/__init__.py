@@ -73,10 +73,9 @@ class TestConfig:
 
     @property
     def fake_render(self):
-        """return concat strings as if we rendered it"""
-        t = JinjaTemplate(self.cfg['t'])
-        ret = t.render(json.loads(self.cfg['p']))
-        return ret
+        """return Jinja2 Rendered from cfg values"""
+        t = JinjaTemplate(self.cfg['t']).render(json.loads(self.cfg['p']))
+        return t
 
     def set_user(self, user=None):
         self._set_user(user)

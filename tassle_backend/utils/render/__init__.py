@@ -32,6 +32,16 @@ class RenderMixin:
     """
     engine = None
 
+    def parse_request(self, request):
+        """ Takes request and modifies the template instance with User, Files
+        returns (template, params) as strings
+         """
+        if request.user.is_anonymous:
+            self.user = None
+        else:
+            self.user = request.user
+        return self._parse_query_params(request)
+
     @property
     def get_template(self):
         return self._read_template()
