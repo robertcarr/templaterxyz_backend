@@ -1,3 +1,4 @@
+import json
 from unittest.mock import Mock
 
 from django.test import TestCase
@@ -39,39 +40,37 @@ class TestParseParams(APITestCase):
     PARAMS = '{"name": "joe"}'
 
     def setUp(self):
-        self.template_file = ContentFile(self.TEMPLATE)
-        self.param_file = ContentFile(self.PARAMS)
         self.cfg = TestConfig()
         self.req = Mock()
         self.obj = RenderMixin()
 
     def test_post_files(self):
         """can I post template and params as multipart form files?"""
-        self.req.data = {'t': self.template_file, 'p': self.param_file}
+        self.req.data = {'t': self.cfg.get_template_file(), 'p': self.cfg.get_params_file()}
         (t, p) = self.obj._parse_query_params(self.req)
         self.assertEqual(t, self.TEMPLATE)
-        self.assertEqual(p, self.PARAMS)
+        self.assertEqual(p, json.loads(self.PARAMS))
 
     def test_post_files_full(self):
         """can I post template and params as multipart form files using full name?"""
-        self.req.data = {'template': self.template_file, 'params': self.param_file}
+        self.req.data = {'template': self.cfg.get_template_file(), 'params': self.cfg.get_params_file()}
         (t, p) = self.obj._parse_query_params(self.req)
         self.assertEqual(t, self.TEMPLATE)
-        self.assertEqual(p, self.PARAMS)
+        self.assertEqual(p, json.loads(self.PARAMS))
 
     def test_post_data(self):
         """Can I post data as content instead of files?"""
         self.req.data = {'t': self.TEMPLATE, 'p': self.PARAMS}
         (t, p) = self.obj._parse_query_params(self.req)
         self.assertEqual(t, self.TEMPLATE)
-        self.assertEqual(p, self.PARAMS)
+        self.assertEqual(p, json.loads(self.PARAMS))
 
     def test_post_data_full(self):
         """Can I post data as content instead of files with full names?"""
         self.req.data = {'template': self.TEMPLATE, 'params': self.PARAMS}
         (t, p) = self.obj._parse_query_params(self.req)
         self.assertEqual(t, self.TEMPLATE)
-        self.assertEqual(p, self.PARAMS)
+        self.assertEqual(p, json.loads(self.PARAMS))
 
 
 class TestFiles(APITestCase):

@@ -152,10 +152,7 @@ class TemplateDetailViewset(DestroyModelMixin, viewsets.GenericViewSet):
             t = Templates.objects.get(uuid=uuid)
         except Templates.DoesNotExist:
             raise TemplateNotFound
-
         (template_data, param_data) = t._parse_query_params(request)
-        log.error(f'Params={param_data}')
-
         try:
             rendered_template = t.render(param_data)
             return Response(rendered_template, content_type='text/plain', status=200)
