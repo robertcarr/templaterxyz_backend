@@ -152,7 +152,15 @@ class TemplateDetailViewset(DestroyModelMixin, viewsets.GenericViewSet):
             t = Templates.objects.get(uuid=uuid)
         except Templates.DoesNotExist:
             raise TemplateNotFound
+
         (template_data, param_data) = t._parse_query_params(request)
+        # If we are passed in a new Template, lets save this updated template first.
+        # this will overwrite the original template
+        if template_data:
+            f = t.to_file(template_data, encoding='utf-8')
+            t.template.save('t', f, save=True)
+
+        # Re-render the template with parameters if supplied.  If none supplied, use any saved params
         try:
             rendered_template = t.render(param_data)
             return Response(rendered_template, content_type='text/plain', status=200)

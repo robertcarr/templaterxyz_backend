@@ -40,3 +40,8 @@ class TestSpecificTemplate(APIAuthTestCase):
         with self.assertRaises(self.t._Templates.DoesNotExist):
             self.t._Templates.objects.get(uuid=self.uuid)
 
+    def test_update_template(self):
+        """Update just the template using existing params"""
+        resp = self.client.post(self.url,
+                                {'template': 'test {{name}}'})
+        self.assertEquals(resp.data, 'test joe', resp.data)

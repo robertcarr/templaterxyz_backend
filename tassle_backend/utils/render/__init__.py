@@ -66,14 +66,20 @@ class RenderMixin:
             return contents
         #return fileobj.read()
 
-    def to_file(self, data, encoding='utf-8'):
+    def to_file(self, data, filename='template', encoding=None):
         """
         Returns a ContentFile from the string of data
+        :param encoding: Encoding format
+        :param filename: string filename
         :param data: string
         :return: ContentFile
         """
         assert (isinstance(data, str)), "Must be String"
-        return ContentFile(data)
+        if encoding:
+            data = data.encode(encoding)
+        f = ContentFile(data)
+        f.name = filename
+        return f
 
     def _parse_query_params(self, request):
         """
@@ -87,8 +93,6 @@ class RenderMixin:
 
         if isinstance(template_data, list):
             template_data = template_data[0]
-        #if isinstance(param_data, dict):
-        #    param_data = json.dumps(param_data)
         if isinstance(template_data, File):
             template_data = self.from_file(template_data)
         if isinstance(param_data, File):
@@ -96,7 +100,7 @@ class RenderMixin:
         if isinstance(param_data, str):
             param_data = json.loads(param_data)
 
-        # Return Boolean for template_data param_data if they had value submitted
+        # Return template_data as String and Params as Dict
         return (template_data, param_data)
 
     def _update_params(self, param_file):
@@ -108,21 +112,10 @@ class RenderMixin:
         # Reset to beginning of file if it's been read already
         return self.from_file(self.template)
 
-        if self.template.tell() > 0:
-            self.template.seek(0)
-        template = self.template.read().decode('utf-8')
-        self.template.seek(0)  # return to beginning
-        return template
-
     def _read_params(self):
         """Read parameters from storage and return as DICT """
         params = self.from_file(self.params)
 
-       # if self.params.tell() > 0:
-       #     self.params.seek(0)
-       # params = self.params.read().decode('utf-8')
-       # log.error(f'Params={params}')
-       # self.params.seek(0)
         try:
             params = json.loads(params)
         except json.JSONDecodeError:
@@ -139,9 +132,9 @@ class RenderMixin:
         assert isinstance(params, dict), f'Params not a valid Dict: {params}'
         assert isinstance(template, str), f'Template must be string: {template}'
         try:
-            rendered_template = jinja2.Template(template).render(params)
+            rendered_template = jinja2.Template(template, undefined=StrictUndefined).render(params)
         except UndefinedError as e:
-            raise MissingParameters
+            raise MissingParameters(e)
         return rendered_template
 
     def render_string(self, template, params):
