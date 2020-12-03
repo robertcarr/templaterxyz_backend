@@ -20,8 +20,8 @@ from restapi.api import router
 from restapi.views import status_view
 
 urlpatterns = [
-    path('', status_view, name='status'),
-    path('api/', include(router.urls)),
-    path('grappelli/', include('grappelli.urls')),
+    path('status/', status_view, name='status'),
     path('admin/', admin.site.urls),
+    path('grappelli/', include('grappelli.urls')),
+    path('', include(router.urls)),
 ]

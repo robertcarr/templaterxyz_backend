@@ -115,6 +115,26 @@ class Templates(models.Model, RenderMixin):
     name = models.CharField(max_length=100, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
 
+
+    @property
+    def is_editable(self):
+        """
+        Can I update this template or params?
+        :return: Boolean
+        """
+        if self.is_owner:
+            return True
+        else:
+            return False
+
+    @property
+    def is_readable(self):
+        """Is this public or am I the owner?"""
+        if self.is_public or self.is_owner:
+            return True
+        else:
+            return False
+
     @property
     def is_public(self):
         """Is this accessible to anyone?"""

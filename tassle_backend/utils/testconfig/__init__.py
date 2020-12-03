@@ -43,7 +43,7 @@ class TestConfig:
         self.user = AnonymousUser
         self.settings = None
         self.set_template()
-        self._Templates = Templates
+        self._Templates = Templates  # Templates Model Object
 
     @property
     def template(self):

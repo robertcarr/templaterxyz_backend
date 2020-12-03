@@ -49,3 +49,12 @@ class MissingTemplateParameters(APIException):
     status_code = 400
     default_detail = "Your template is missing one or more parameters"
     default_code = 'parameters_missing'
+
+
+class TemplateInvalidOrMissing(APIException):
+    """
+    Raised when a template record exists, but the template itself is missing or invalid for some reason
+    """
+    status_code = 400
+    default_detail = 'The template code is missing or corrupted'
+    default_code = 'template_missing_or_corrupted'

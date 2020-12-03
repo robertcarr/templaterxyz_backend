@@ -12,7 +12,7 @@ from django_cognito_jwt import JSONWebTokenAuthentication
 from django.db.models import F
 from jinja2 import exceptions as jinja2_exceptions
 
-from restapi.exceptions import MissingTemplateOrParams, TemplateNotFound, MissingParameters, AccountRequired
+from restapi.exceptions import MissingTemplateOrParams, TemplateNotFound, MissingParameters, AccountRequired, TemplateInvalidOrMissing
 from utils.render import PlainTextRenderer
 from .models import Templates, Stats
 from .serializers import TemplatesSerializer, StatsSerializer
@@ -37,10 +37,11 @@ class TemplateViewset(viewsets.ModelViewSet):
     lookup_field = 'uuid'
     lookup_url_kwarg = 'uuid'
     serializer_class = TemplatesSerializer
-    renderer_classes = [PlainTextRenderer, JSONRenderer, PlainTextRenderer]
-    authentication_classes = [TokenAuthentication, JSONWebTokenAuthentication]
+    renderer_classes = [JSONRenderer, PlainTextRenderer]
+    authentication_classes = []
+    #authentication_classes = [TokenAuthentication, JSONWebTokenAuthentication]
     permission_classes = [AllowAny]
-    http_method_names = ['post', 'delete', 'get', 'put']
+    http_method_names = ['post', 'put']
 
     def list(self, request):
         """
@@ -67,7 +68,11 @@ class TemplateViewset(viewsets.ModelViewSet):
         :return:
         """
         t = Templates()
-        (template, params) = t.parse_request(request)
+        try:
+            (template, params) = t.parse_request(request)
+        except AssertionError:
+            raise MissingTemplateOrParams
+
         stats = Stats.objects.filter(id=1)
         stats.update(templates_rendered=F('templates_rendered') + 1)
         rendered_t = t.render_string(template, params)
@@ -99,19 +104,27 @@ class TemplateViewset(viewsets.ModelViewSet):
             raise TemplateNotFound
         return Response(t.get_template, content_type='text/plain')
 
-    @action(methods=['post'], detail=False)
+    @action(methods=['post'], detail=False, renderer_classes=[JSONRenderer])
     def save(self, request, *kwargs):
         """
-        User wants to edit a template so we return the details & URL
+        User wants to edit a template so we save the template and any parameters
+        and return the URL to edit it.  If a template is saved without parameters being passed in
+        any exiting file associated with it is deleted.
+
         :param request:
         :param kwargs:
         :return: link to template editor for this template
         """
         t = Templates()
-        t.parse_request(request)
+        (template_data, params_data) = t.parse_request(request)
+        t.template = t.to_file(template_data, 'template.j2', encoding='utf-8')
+        if params_data:
+            t.params = t.to_file(params_data, 'params.json', encoding='utf-8')
+        else:
+            t.params.delete()
         t.save()
         serializer = TemplatesSerializer(t)
-        return Response({'url': t.get_url()})
+        return Response({'url': t.get_url()}, content_type='application/json')
 
     @action(methods=['get'], detail=True)
     def dump(self, request, uuid=None):
@@ -155,25 +168,40 @@ class TemplateDetailViewset(DestroyModelMixin, viewsets.GenericViewSet):
 
         (template_data, param_data) = t._parse_query_params(request)
         # If we are passed in a new Template, lets save this updated template first.
-        # this will overwrite the original template
+        # this will overwrite the original template.  Need to clean this up a bit.  Messy.
         if template_data:
             f = t.to_file(template_data, encoding='utf-8')
             t.template.save('t', f, save=True)
-
+            # Hokey but if it's template only return OK 200 after saving the new template
+            if not param_data:
+                return Response(status=200)
         # Re-render the template with parameters if supplied.  If none supplied, use any saved params
-        try:
-            rendered_template = t.render(param_data)
-            return Response(rendered_template, content_type='text/plain', status=200)
-        except KeyError:
-            raise MissingParameters
+        if param_data:
+            try:
+                rendered_template = t.render(param_data)
+                return Response(rendered_template, content_type='text/plain', status=200)
+            except KeyError:
+                raise MissingParameters
 
-    def retrieve(self, request, uuid=None, **kwargs):
+    def retrieve(self, request, uuid=None, renderer_classes=[PlainTextRenderer], **kwargs):
         # TODO: Check ownership
         try:
             t = Templates.objects.get(uuid=uuid)
             serializer = TemplatesSerializer(t)
-        except t.DoesNotExist:
+        except Templates.DoesNotExist:
+            raise TemplateNotFound
+        try:
+            return Response(serializer.data['template'], content_type='text/plain')
+        except ValueError:
+            raise TemplateInvalidOrMissing
+
+    @action(methods=['get'], detail=True, renderer_classes=[JSONRenderer])
+    def details(self, request, uuid=None, **kwargs):
+        """Get Detailed info about a template"""
+        try:
+            t = Templates.objects.get(uuid=uuid)
+            serializer = TemplatesSerializer(t)
+        except Templates.DoesNotExist:
             raise TemplateNotFound
         return Response(serializer.data, content_type='application/json')
-
 

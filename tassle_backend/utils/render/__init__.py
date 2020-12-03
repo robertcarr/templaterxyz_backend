@@ -66,14 +66,16 @@ class RenderMixin:
             return contents
         #return fileobj.read()
 
-    def to_file(self, data, filename='template', encoding=None):
+    def to_file(self, data, filename='template.j2', encoding=None):
         """
-        Returns a ContentFile from the string of data
+        Returns a ContentFile from the string of data or a Dict which is converted via JSON dumps
         :param encoding: Encoding format
         :param filename: string filename
-        :param data: string
+        :param data: string or Dict
         :return: ContentFile
         """
+        if isinstance(data, dict):
+            data = json.dumps(data)
         assert (isinstance(data, str)), "Must be String"
         if encoding:
             data = data.encode(encoding)
@@ -81,15 +83,15 @@ class RenderMixin:
         f.name = filename
         return f
 
-    def _parse_query_params(self, request):
+    def _parse_query_params(self, request, raise_for_missing=False):
         """
-        Take the submitted queryparams data and return the template and params as a string
+        Take the submitted queryparams data and return the template and params as a Dict
         :param request:
         :return: (template string, params as Dict)
         """
         # Accept Files named 'template' or 't' for short, 'params' and 'p'
-        template_data = request.data.get('template', request.data.get('t'))
-        param_data = request.data.get('params', request.data.get('p'))
+        template_data = request.data.get('template', request.data.get('t', ""))
+        param_data = request.data.get('params', request.data.get('p', {}))
 
         if isinstance(template_data, list):
             template_data = template_data[0]
@@ -122,7 +124,7 @@ class RenderMixin:
             raise InvalidParameterFormat(params)
         return params
 
-    def _render_template(self, template, params):
+    def _render_template(self, template="", params={}):
         """
         Actually Renders the template with parameters
         :param template: String
@@ -133,7 +135,7 @@ class RenderMixin:
         assert isinstance(template, str), f'Template must be string: {template}'
         try:
             rendered_template = jinja2.Template(template, undefined=StrictUndefined).render(params)
-        except UndefinedError as e:
+        except (UndefinedError) as e:
             raise MissingParameters(e)
         return rendered_template
 

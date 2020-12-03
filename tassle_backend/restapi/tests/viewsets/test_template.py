@@ -24,13 +24,15 @@ class TestTemplateList(APIAuthTestCase):
         self.t.set_user('default')
         self.client.set_user(self.t.user)
         resp = self.client.get(reverse('template-list'))
-        self.assertEqual(resp.status_code, 200)
+        # Temp 405 check since we disabled auth
+        self.assertEqual(resp.status_code, 405)
 
     def test_list_anon_user(self):
         """We should fail 401 non-authenticated if not logged in"""
         self.client.set_user()
         resp = self.client.get(reverse('template-list'))
-        self.assertEqual(resp.status_code, 401, resp.data)
+        # Should be 405 until auth is enabled
+        self.assertEqual(resp.status_code, 405, resp.data)
 
 
 class TestTemplateRender(APIAuthTestCase):
@@ -43,6 +45,11 @@ class TestTemplateRender(APIAuthTestCase):
         self.t = TestConfig()
         self.url = reverse('template-list')
 
+    def test_post_no_params(self):
+        """Can we handle a POST to render but no variables sent?"""
+        resp = self.client.post(self.url)
+        self.assertEqual(resp.status_code, 200, resp.data)
+
     def test_post_template(self):
         """Can we render a new Template as files?"""
         resp = self.client.post(self.url,
@@ -53,6 +60,13 @@ class TestTemplateRender(APIAuthTestCase):
         self.assertEqual(resp.data, self.t.fake_render)
         self.assertEqual(resp.content_type, 'text/plain')
 
+    def test_render_template_error_json(self):
+        """Do we get JSON return type when we have render error?"""
+        resp = self.client.post(self.url, {'template': 'test {{ name }}'})
+        self.assertEqual(resp.status_code, 400, resp.data)
+        #with self.assertRaises(AssertionError) as e:
+        #    self.assertEqual(resp.data, self.t.fake_render)
+        #self.assertEqual(resp.content_type, 'application/json')
 
     def test_post_template_short(self):
         """Can we render new template using t= and p= instead of template and params?"""

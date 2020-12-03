@@ -5,6 +5,8 @@
         "profile_name": "default",
         "project_name": "tassle-backend",
         "runtime": "python3.8",
-        "s3_bucket": "zappa-r6bwffpsd"
-    }
+        "s3_bucket": "zappa-r6bwffpsd",
+"domain": "api.templater.xyz",
+"certificate_arn": "arn:aws:acm:us-east-1:360136962554:certificate/6f3f8ac0-a764-48a4-aade-6993d7727dfb"
+}
 }
