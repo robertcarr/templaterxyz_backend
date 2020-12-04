@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 
 from restapi.models import Templates
+from restapi.exceptions import MissingParameters
 
 from utils.drf import APIAdvancedAuth, APIAuthTestCase
 from utils.testconfig import TestConfig
@@ -20,7 +21,12 @@ class TestSpecificTemplate(APIAuthTestCase):
         self.uuid = self.t.cfg['template']['uuid']
         self.t.set_template(1)
         self.t.set_user('default')
-        self.url = f'/api/{self.uuid}/'
+        self.url = f'/{self.uuid}/'
+
+    def test_post_template_no_params(self):
+        """Post to a template without submitting new params"""
+        resp = self.client.post(self.url)
+        self.assertEqual(resp.status_code, 400, resp.data)
 
     def test_render_with_new_params(self):
         """Can we re-render an existing template with new parameters?"""

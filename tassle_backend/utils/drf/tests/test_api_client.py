@@ -1,4 +1,5 @@
 import json
+from unittest import skip
 
 from django.conf import settings
 from django.test import TestCase, RequestFactory
@@ -47,6 +48,7 @@ class TestAPIAuth(TestCase):
         resp = self.obj.get('/')
         self.assertEqual(json.loads(resp.content)['status'], 'ok')
 
+    @skip('Auth disabled for now')
     def test_get_request_no_auth(self):
         """Do we get denied without USER set/Anonymous set?"""
         self.obj.set_user()

@@ -182,6 +182,8 @@ class TemplateDetailViewset(DestroyModelMixin, viewsets.GenericViewSet):
                 return Response(rendered_template, content_type='text/plain', status=200)
             except KeyError:
                 raise MissingParameters
+        else:
+            raise MissingParameters
 
     def retrieve(self, request, uuid=None, renderer_classes=[PlainTextRenderer], **kwargs):
         # TODO: Check ownership
