@@ -71,3 +71,8 @@ class TestSpecificTemplate(APIAuthTestCase):
         resp = self.client.get(self.url)
         self.assertEqual(resp.status_code, 404)
         #self.assertEqual(resp.data['detail'], 'code', resp.data)
+
+    def test_template_with_params(self):
+        """Can we request params returned if they exist?"""
+        resp = self.client.get(self.url, {'details': 'true'})
+        self.assertTrue('params' in resp.data, resp.data)

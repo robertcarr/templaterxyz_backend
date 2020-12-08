@@ -10,10 +10,12 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_cognito_jwt import JSONWebTokenAuthentication
 from django.db.models import F
-from jinja2 import exceptions as jinja2_exceptions
+from django.http import HttpResponse
 
-from restapi.exceptions import MissingTemplateOrParams, TemplateNotFound, MissingParameters, AccountRequired, TemplateInvalidOrMissing
+from restapi.exceptions import MissingTemplateOrParams, TemplateNotFound, MissingParameters, AccountRequired, \
+    TemplateInvalidOrMissing
 from utils.render import PlainTextRenderer
+from utils.drf.content import CustomContentNegotiation
 from .models import Templates, Stats
 from .serializers import TemplatesSerializer, StatsSerializer
 
@@ -39,21 +41,23 @@ class TemplateViewset(viewsets.ModelViewSet):
     serializer_class = TemplatesSerializer
     renderer_classes = [JSONRenderer, PlainTextRenderer]
     authentication_classes = []
-    #authentication_classes = [TokenAuthentication, JSONWebTokenAuthentication]
+    # authentication_classes = [TokenAuthentication, JSONWebTokenAuthentication]
     permission_classes = [AllowAny]
-    http_method_names = ['post', 'put']
+    http_method_names = ['get', 'post', 'put']
 
     def list(self, request):
         """
         If logged in, return your some template details otherwise raise exception
-        :param requset:
+        :param request:
         :return:
         """
+        msg = {'detail': 'see https://templater.xyz for help'}
+        return Response(msg, content_type='application/json')
+
         if request.user.is_anonymous:
             raise AccountRequired
         # For now just dump all their templates
         serializer = TemplatesSerializer(self.get_queryset(), many=True)
-
         return Response(serializer.data)
 
     def create(self, request, **kwargs):
@@ -76,7 +80,7 @@ class TemplateViewset(viewsets.ModelViewSet):
         stats = Stats.objects.filter(id=1)
         stats.update(templates_rendered=F('templates_rendered') + 1)
         rendered_t = t.render_string(template, params)
-        return Response(rendered_t, content_type='text/plain')
+        return HttpResponse(rendered_t, content_type='text/plain')
 
     def update(self, request, uuid=None):
         """ Render and Existing Template but with new parameters """
@@ -102,7 +106,7 @@ class TemplateViewset(viewsets.ModelViewSet):
             t = Templates.objects.get(uuid=uuid)
         except Templates.DoesNotExist:
             raise TemplateNotFound
-        return Response(t.get_template, content_type='text/plain')
+        return HttpResponse(t.get_template, content_type='text/plain')
 
     @action(methods=['post'], detail=False, renderer_classes=[JSONRenderer])
     def save(self, request, *kwargs):
@@ -138,9 +142,9 @@ class TemplateViewset(viewsets.ModelViewSet):
         except t.DoesNotExist:
             raise TemplateNotFound
 
+
     def get_queryset(self):
         return self.model.objects.filter(user=self.request.user)
-
 
 class TemplateDetailViewset(DestroyModelMixin, viewsets.GenericViewSet):
     """
@@ -193,6 +197,9 @@ class TemplateDetailViewset(DestroyModelMixin, viewsets.GenericViewSet):
         except Templates.DoesNotExist:
             raise TemplateNotFound
         try:
+            # If we ask for params in the UI, we want to return them and respond as JSON
+            if request.query_params.get('details'):
+                return Response(serializer.data, content_type='application/json')
             return Response(serializer.data['template'], content_type='text/plain')
         except ValueError:
             raise TemplateInvalidOrMissing
@@ -206,4 +213,3 @@ class TemplateDetailViewset(DestroyModelMixin, viewsets.GenericViewSet):
         except Templates.DoesNotExist:
             raise TemplateNotFound
         return Response(serializer.data, content_type='application/json')
-

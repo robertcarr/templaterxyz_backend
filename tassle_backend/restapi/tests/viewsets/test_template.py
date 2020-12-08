@@ -9,6 +9,9 @@ from utils.testconfig import TestConfig
 
 
 
+
+
+
 class TestTemplateList(APIAuthTestCase):
     """
     List users Templates

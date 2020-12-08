@@ -168,6 +168,8 @@ class PlainTextRenderer(renderers.BaseRenderer):
     Return plain/text response body that handles NEWLINE instead of printing /n
     """
     media_type = 'text/plain'
+    format = 'txt'
+    render_style = 'text'
 
     def render(self, data, media_type=None, renderer_context=None):
         return smart_text(data, encoding=self.charset)
