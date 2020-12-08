@@ -124,31 +124,34 @@ class RenderMixin:
             raise InvalidParameterFormat(params)
         return params
 
-    def _render_template(self, template="", params={}):
+    def _render_template(self, template="", params={}, **kwargs):
         """
         Actually Renders the template with parameters
         :param template: String
         :param params:  Dict
         :return:  String of rendered template
         """
+        render_options = {}
         assert isinstance(params, dict), f'Params not a valid Dict: {params}'
         assert isinstance(template, str), f'Template must be string: {template}'
+        if kwargs.get('undefined') == 'raise':
+            render_options = {'undefined': StrictUndefined}
         try:
-            rendered_template = jinja2.Template(template, undefined=StrictUndefined).render(params)
+            rendered_template = jinja2.Template(template, **render_options).render(params)
         except (UndefinedError) as e:
             raise MissingParameters(e)
         return rendered_template
 
-    def render_string(self, template, params):
+    def render_string(self, template, params, **kwargs):
         """
         Render a template as string with dict params
         :param template:
         :param params: Dict
         :return: merged template as string
         """
-        return self._render_template(template, params)
+        return self._render_template(template, params, **kwargs)
 
-    def render(self, params=None, undefined=StrictUndefined):
+    def render(self, params=None):
         """
         Takes a Dict of params and re-renders the already existing Template
 
