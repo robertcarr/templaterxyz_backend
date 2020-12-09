@@ -10,6 +10,15 @@ class MissingTemplateOrParams(APIException):
     default_code = 'template_or_params_missing'
 
 
+class TemplateSyntaxError(APIException):
+    """
+    Raised when some type of Syntax error is raised when trying to render the template in Jinja
+    """
+    status_code = 400
+    default_detail = 'Template Syntax Error when trying to render the template'
+    default_code = 'template_syntax_error'
+
+
 class TemplateNotFound(APIException):
     """
     Raised when the template is not found by UUID

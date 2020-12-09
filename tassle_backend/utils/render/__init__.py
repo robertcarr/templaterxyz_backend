@@ -3,13 +3,13 @@ import logging
 
 import jinja2
 from jinja2 import Template as JinjaTemplate, StrictUndefined
-from jinja2.exceptions import UndefinedError
+from jinja2.exceptions import UndefinedError, TemplateSyntaxError as JinjaTemplateSyntaxError
 from rest_framework import renderers
 from django.utils.encoding import smart_text
 from django.core.files.base import ContentFile, File
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
-from restapi.exceptions import InvalidParameterFormat, MissingParameters
+from restapi.exceptions import InvalidParameterFormat, MissingParameters, TemplateSyntaxError
 
 class BaseTemplateRenderer:
     """
@@ -140,6 +140,8 @@ class RenderMixin:
             rendered_template = jinja2.Template(template, **render_options).render(params)
         except (UndefinedError) as e:
             raise MissingParameters(e)
+        except (TypeError, JinjaTemplateSyntaxError) as e:
+            raise TemplateSyntaxError(detail=e)
         return rendered_template
 
     def render_string(self, template, params, **kwargs):
