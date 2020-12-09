@@ -11,6 +11,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_cognito_jwt import JSONWebTokenAuthentication
 from django.db.models import F
 from django.http import HttpResponse
+from django.core.mail import send_mail
 
 from restapi.exceptions import MissingTemplateOrParams, TemplateNotFound, MissingParameters, AccountRequired, \
     TemplateInvalidOrMissing
@@ -21,6 +22,19 @@ from .serializers import TemplatesSerializer, StatsSerializer
 
 log = logging.getLogger(__name__)
 
+class FeedbackViewset(viewsets.ViewSet):
+    """
+    Accept Feedback and send as email
+    """
+    http_method_names = ['post']
+
+    def create(self, request, **kwargs):
+        """ POST new feedback"""
+        msg = request.data.get('msg')
+        if msg:
+            print(msg)
+            send_mail('Templater Feedback', json.dumps(msg), 'admin@clientless.io', ['carrenator@gmail.com'])
+        return Response(status=200)
 
 class StatsViewset(viewsets.ModelViewSet):
     model = Stats

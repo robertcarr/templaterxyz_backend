@@ -213,3 +213,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = os.environ.get('SMTP_HOST', None)
+EMAIL_PORT = os.environ.get('SMTP_PORT', '587')
+EMAIL_USE_TLS = os.environ.get('SMTP_TLS', True)
+EMAIL_HOST_USER = os.environ.get('SMTP_USER', None)
+EMAIL_HOST_PASSWORD = os.environ.get('SMTP_PASSWORD', None)
+DEFAULT_EMAIL_FROM='noreply@clientless.io'
