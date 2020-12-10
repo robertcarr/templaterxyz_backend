@@ -144,7 +144,11 @@ class TemplateViewset(viewsets.ModelViewSet):
             t.params.delete()
         t.save()
         serializer = TemplatesSerializer(t)
-        return Response({'url': t.get_url()}, content_type='application/json')
+        return Response({
+            'ui_url': f'https://templater.xyz/{t.uuid}',
+            'api_url': t.get_url(),
+            'template_id': t.uuid},
+            content_type='application/json', status=200)
 
     @action(methods=['get'], detail=True)
     def dump(self, request, uuid=None):
