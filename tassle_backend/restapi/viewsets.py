@@ -199,7 +199,7 @@ class TemplateDetailViewset(DestroyModelMixin, viewsets.GenericViewSet):
         if param_data:
             try:
                 rendered_template = t.render(param_data)
-                return Response(rendered_template, content_type='text/plain', status=200)
+                return HttpResponse(rendered_template, content_type='text/plain', status=200)
             except KeyError:
                 raise MissingParameters
         else:

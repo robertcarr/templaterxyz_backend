@@ -35,7 +35,7 @@ def get_template_url(instance, request=None):
     :return: str url location
     """
     if request:
-        return f'{get_current_site(request)}/{instance.uuid}'
+        return f'https://{get_current_site(request)}/{instance.uuid}'
     else:
-        return f'{Site.objects.get_current()}/{instance.uuid}'
+        return f'https://{Site.objects.get_current()}/{instance.uuid}'
 
