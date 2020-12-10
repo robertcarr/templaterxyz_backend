@@ -141,7 +141,9 @@ class RenderMixin:
         except (UndefinedError) as e:
             raise MissingParameters(e)
         except (TypeError, JinjaTemplateSyntaxError) as e:
-            raise TemplateSyntaxError(detail=e)
+            raise TemplateSyntaxError(e)
+        except:
+            raise TemplateSyntaxError
         return rendered_template
 
     def render_string(self, template, params, **kwargs):

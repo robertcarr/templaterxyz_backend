@@ -26,7 +26,7 @@ class TestSpecificTemplate(APIAuthTestCase):
     def test_post_template_no_params(self):
         """Post to a template without submitting new params"""
         resp = self.client.post(self.url)
-        self.assertEqual(resp.status_code, 400, resp.data)
+        self.assertEqual(resp.status_code, 400, resp.datarezf)
 
     def test_render_with_new_params(self):
         """Can we re-render an existing template with new parameters?"""

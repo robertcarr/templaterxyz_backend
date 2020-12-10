@@ -27,6 +27,8 @@ class FeedbackViewset(viewsets.ViewSet):
     Accept Feedback and send as email
     """
     http_method_names = ['post']
+    permission_classes = [AllowAny]
+    authentication_classes = []
 
     def create(self, request, **kwargs):
         """ POST new feedback"""
@@ -123,7 +125,7 @@ class TemplateViewset(viewsets.ModelViewSet):
         return HttpResponse(t.get_template, content_type='text/plain')
 
     @action(methods=['post'], detail=False, renderer_classes=[JSONRenderer])
-    def save(self, request, *kwargs):
+    def share(self, request, *kwargs):
         """
         User wants to edit a template so we save the template and any parameters
         and return the URL to edit it.  If a template is saved without parameters being passed in
@@ -210,12 +212,14 @@ class TemplateDetailViewset(DestroyModelMixin, viewsets.GenericViewSet):
             serializer = TemplatesSerializer(t)
         except Templates.DoesNotExist:
             raise TemplateNotFound
+        print(serializer.data)
         try:
             # If we ask for params in the UI, we want to return them and respond as JSON
             if request.query_params.get('details'):
                 return Response(serializer.data, content_type='application/json')
+            return HttpResponse(serializer.data['template'], content_type='text/plain')
             return Response(serializer.data['template'], content_type='text/plain')
-        except ValueError:
+        except ValueError as e:
             raise TemplateInvalidOrMissing
 
     @action(methods=['get'], detail=True, renderer_classes=[JSONRenderer])

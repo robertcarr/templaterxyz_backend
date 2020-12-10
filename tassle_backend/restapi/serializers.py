@@ -19,10 +19,16 @@ class TemplatesSerializer(serializers.ModelSerializer):
     params = serializers.SerializerMethodField()
 
     def get_params(self, obj):
-        return json.loads(obj.params.read())
+        try:
+            return json.loads(obj.params.read())
+        except:
+            return None
 
     def get_template(self, obj):
-        return obj.template.read()
+        try:
+            return obj.template.read()
+        except:
+            return None
 
     def get_id(self, obj):
         self.IDX += 1
