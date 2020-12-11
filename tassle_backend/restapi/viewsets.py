@@ -22,6 +22,16 @@ from .serializers import TemplatesSerializer, StatsSerializer
 
 log = logging.getLogger(__name__)
 
+
+
+def update_template_stats():
+    """
+    Update the stats for number of rendered templates
+    :return: None
+    """
+    stats = Stats.objects.filter(id=1)
+    stats.update(templates_rendered=F('templates_rendered') + 1)
+
 class FeedbackViewset(viewsets.ViewSet):
     """
     Accept Feedback and send as email
@@ -39,6 +49,9 @@ class FeedbackViewset(viewsets.ViewSet):
         return Response(status=200)
 
 class StatsViewset(viewsets.ModelViewSet):
+    """
+    Return template stats for the homepage
+    """
     model = Stats
     serializer_class = StatsSerializer
     http_method_names = ['get']
@@ -88,18 +101,18 @@ class TemplateViewset(viewsets.ModelViewSet):
         :return:
         """
         t = Templates()
+        update_template_stats()
         try:
             (template, params) = t.parse_request(request)
         except AssertionError:
             raise MissingTemplateOrParams
 
-        stats = Stats.objects.filter(id=1)
-        stats.update(templates_rendered=F('templates_rendered') + 1)
         rendered_t = t.render_string(template, params)
         return HttpResponse(rendered_t, content_type='text/plain')
 
     def update(self, request, uuid=None):
         """ Render and Existing Template but with new parameters """
+        update_template_stats()
         try:
             t = Templates.objects.get(uuid=uuid)
             try:
@@ -135,6 +148,7 @@ class TemplateViewset(viewsets.ModelViewSet):
         :param kwargs:
         :return: link to template editor for this template
         """
+        update_template_stats()
         t = Templates()
         (template_data, params_data) = t.parse_request(request)
         t.template = t.to_file(template_data, 'template.j2', encoding='utf-8')
@@ -153,6 +167,8 @@ class TemplateViewset(viewsets.ModelViewSet):
     @action(methods=['get'], detail=True)
     def dump(self, request, uuid=None):
         """ Dump the template and params in JSON format"""
+
+        update_template_stats()
         try:
             t = Templates.objects.get(uuid=uuid)
             template_info = {'template': t.template,
@@ -184,6 +200,8 @@ class TemplateDetailViewset(DestroyModelMixin, viewsets.GenericViewSet):
     queryset = Templates.objects.all()
 
     def post(self, request, uuid=None, **kwargs):
+
+        update_template_stats()
         """Creating on an existing Template should render the template with new params"""
         try:
             t = Templates.objects.get(uuid=uuid)
@@ -211,6 +229,7 @@ class TemplateDetailViewset(DestroyModelMixin, viewsets.GenericViewSet):
 
     def retrieve(self, request, uuid=None, renderer_classes=[PlainTextRenderer], **kwargs):
         # TODO: Check ownership
+        update_template_stats()
         try:
             t = Templates.objects.get(uuid=uuid)
             serializer = TemplatesSerializer(t)
@@ -229,6 +248,7 @@ class TemplateDetailViewset(DestroyModelMixin, viewsets.GenericViewSet):
     @action(methods=['get'], detail=True, renderer_classes=[JSONRenderer])
     def details(self, request, uuid=None, **kwargs):
         """Get Detailed info about a template"""
+        update_template_stats()
         try:
             t = Templates.objects.get(uuid=uuid)
             serializer = TemplatesSerializer(t)

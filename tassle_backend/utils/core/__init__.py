@@ -1,5 +1,6 @@
-import shortuuid
+from datetime import datetime
 
+import shortuuid
 from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
 
@@ -22,10 +23,8 @@ def get_upload_folder(instance, filename):
     :param filename: filename if available
     :return:  string of file path
     """
-    if instance.user:
-        return f"{instance.uuid}/{filename}"
-    else:
-        return f"_/{instance.uuid}/{filename}"
+    today = datetime.now()
+    return f"assets/{today.year}/{today.month}/{today.day}/{instance.uuid}/{filename}"
 
 def get_template_url(instance, request=None):
     """
